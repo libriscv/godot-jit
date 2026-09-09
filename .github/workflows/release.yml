@@ -1,0 +1,51 @@
+name: Package and draft release
+
+on:
+  workflow_call:
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: godot-jit-*
+          merge-multiple: true
+          path: .build/package
+      - name: Validate and archive drop-in addon
+        run: |
+          python3 -m unittest discover -s scripts/ci -p 'test_*.py'
+          python3 scripts/ci/package.py .build/package .build/godot-jit.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: godot-jit-addon
+          path: .build/godot-jit.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: package
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: godot-jit-addon
+          path: .build
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "jit-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" .build/godot-jit.zip \
+            --target "$GITHUB_SHA" \
+            --title "Godot JIT build ${GITHUB_RUN_NUMBER}" \
+            --draft --prerelease --generate-notes \
+            --notes 'Extract godot-jit.zip into a Godot 4.6+ project. The archive contains addons/godot_jit with debug and release binaries for Linux x86-64/ARM64, macOS Intel/Apple Silicon, and Windows x86-64.'

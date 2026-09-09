@@ -1,0 +1,44 @@
+name: Linux JIT
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Linux ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: arm64}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14 ninja-build ccache
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: linux-jit-${{ matrix.arch }}
+          max-size: 300M
+      - name: Build and test debug and release
+        env:
+          CC: gcc-14
+          CXX: g++-14
+          JIT_ARCH: ${{ matrix.arch }}
+        run: bash scripts/ci/build.sh linux "$JIT_ARCH"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: godot-jit-linux-${{ matrix.arch }}
+          path: .build/artifact/
+          if-no-files-found: error
+          retention-days: 7

@@ -1,0 +1,27 @@
+name: JIT builds
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jit-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  jit_linux:
+    uses: ./.github/workflows/jit_linux.yml
+  jit_macos:
+    uses: ./.github/workflows/jit_macos.yml
+  jit_windows:
+    uses: ./.github/workflows/jit_windows.yml
+  package:
+    needs: [jit_linux, jit_macos, jit_windows]
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write

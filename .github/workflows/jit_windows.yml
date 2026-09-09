@@ -1,0 +1,49 @@
+name: Windows JIT
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            curl
+            unzip
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
+            ccache:p
+            python:p
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: windows-jit-x86_64
+          max-size: 300M
+      - name: Build and test debug and release
+        env:
+          CC: gcc
+          CXX: g++
+        run: bash scripts/ci/build.sh windows x86_64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: godot-jit-windows-x86_64
+          path: .build/artifact/
+          if-no-files-found: error
+          retention-days: 7

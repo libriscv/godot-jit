@@ -1,0 +1,43 @@
+name: macOS JIT
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: macos-15, arch: arm64}
+          - {runner: macos-15-intel, arch: x86_64}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Install dependencies
+        run: brew install ninja ccache
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: macos-jit-${{ matrix.arch }}
+          max-size: 300M
+      - name: Build and test debug and release
+        env:
+          CC: clang
+          CXX: clang++
+          MACOSX_DEPLOYMENT_TARGET: '11.0'
+          JIT_ARCH: ${{ matrix.arch }}
+        run: bash scripts/ci/build.sh macos "$JIT_ARCH"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: godot-jit-macos-${{ matrix.arch }}
+          path: .build/artifact/
+          if-no-files-found: error
+          retention-days: 7
