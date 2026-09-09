@@ -467,8 +467,11 @@ void *UnsafeGDScript::_instance_create(Object *owner) const {
     if (!instance->state->invoke(-3, nullptr, 0, result)) {
         ERR_PRINT(str(instance->state->error));
         error.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
-    } else if (_has_method("_init"))
+    } else if (_has_method("_init")) {
         instance->callp("_init", pending_args, pending_count, result, error);
+        if (error.error == GDEXTENSION_CALL_OK && !instance->state->error.empty())
+            error.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
+    }
     if (pending_error)
         *pending_error = error;
     return native;
@@ -670,11 +673,11 @@ bool UnsafeGDScriptInstance::property_can_revert(const StringName &name) const {
     return resource->_has_property_default_value(name);
 }
 bool UnsafeGDScriptInstance::property_get_revert(const StringName &name, Variant &result) const {
-    if (!static_dispatch && has_method("_property_can_revert") && has_method("_property_get_revert")) {
-        Variant argument = name, can_revert;
+    if (!static_dispatch && has_method("_property_get_revert")) {
+        Variant argument = name;
         const Variant *args[] = {&argument};
-        if (call_hook("_property_can_revert", args, 1, can_revert) && can_revert.booleanize())
-            return call_hook("_property_get_revert", args, 1, result);
+        if (call_hook("_property_get_revert", args, 1, result) && result.get_type() != Variant::NIL)
+            return true;
     }
     result = resource->_get_property_default_value(name);
     return resource->_has_property_default_value(name);
@@ -682,7 +685,7 @@ bool UnsafeGDScriptInstance::property_get_revert(const StringName &name, Variant
 bool UnsafeGDScriptInstance::call_hook(const StringName &name, const Variant **args, int count, Variant &result) const {
     GDExtensionCallError error{};
     const_cast<UnsafeGDScriptInstance *>(this)->callp(name, args, count, result, error);
-    return error.error == GDEXTENSION_CALL_OK;
+    return error.error == GDEXTENSION_CALL_OK && state->error.empty();
 }
 const GDExtensionPropertyInfo *UnsafeGDScriptInstance::get_property_list(uint32_t *count) const {
     auto list_properties = properties();

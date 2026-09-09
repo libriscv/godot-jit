@@ -13,7 +13,8 @@ class UnsafeGDScriptEditorPlugin : public EditorPlugin {
     static void _bind_methods() {}
   public:
     void _enter_tree() override {
-        auto *editor = EditorInterface::get_singleton()->get_script_editor();
+        EditorInterface *interface = EditorInterface::get_singleton();
+        auto *editor = interface ? interface->get_script_editor() : nullptr;
         if (editor) {
             highlighter.instantiate();
             editor->register_syntax_highlighter(highlighter);
@@ -21,7 +22,8 @@ class UnsafeGDScriptEditorPlugin : public EditorPlugin {
     }
     void _exit_tree() override {
         if (highlighter.is_valid()) {
-            auto *editor = EditorInterface::get_singleton()->get_script_editor();
+            EditorInterface *interface = EditorInterface::get_singleton();
+            auto *editor = interface ? interface->get_script_editor() : nullptr;
             if (editor) editor->unregister_syntax_highlighter(highlighter);
             highlighter.unref();
         }

@@ -110,7 +110,8 @@ void UnsafeDebugger::hook(GJContext *context, GJDebugFrame *view, int event) {
     if (event == GJ_DEBUG_EXIT) {
         if (active && debugger->get_lines_left() > 0 && debugger->get_depth() >= 0)
             debugger->set_depth(debugger->get_depth() - 1);
-        state.frames.pop_back();
+        if (!state.frames.empty())
+            state.frames.pop_back();
         return;
     }
     if (!active || state.frames.empty()) return;
