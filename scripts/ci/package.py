@@ -19,14 +19,14 @@ TARGETS = {
 
 def package(root: Path, output: Path) -> None:
     descriptor = configparser.ConfigParser(interpolation=None)
-    descriptor.read(REPOSITORY / "bin" / ADDON / "godot_jit.gdextension")
+    descriptor.read(REPOSITORY / "bin" / ADDON / "bin" / "godot_jit.gdextension")
     libraries = {}
     files = []
     for platform, (suffix, architectures) in TARGETS.items():
         for arch in architectures:
             key = f"{platform}.release.{arch}"
-            path = ADDON / "bin" / "release" / f"libgodot-jit.{platform}.{arch}.{suffix}"
-            expected = f'"res://{path.as_posix()}"'
+            path = ADDON / "bin" / f"libgodot-jit.{platform}.template_release.{arch}.{suffix}"
+            expected = f'"./{path.name}"'
             if descriptor["libraries"].get(key) != expected:
                 raise ValueError(f"Unexpected or missing library mapping: {key}")
             binary = root / path
@@ -44,7 +44,7 @@ def package(root: Path, output: Path) -> None:
     descriptor.write(manifest)
     output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr((ADDON / "godot_jit.gdextension").as_posix(), manifest.getvalue())
+        archive.writestr((ADDON / "bin" / "godot_jit.gdextension").as_posix(), manifest.getvalue())
         archive.write(REPOSITORY / "README.md", (ADDON / "README.md").as_posix())
         for path in sorted(files):
             archive.write(root / path, path.as_posix())

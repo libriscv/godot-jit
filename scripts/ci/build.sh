@@ -47,7 +47,7 @@ cmake --preset release \
 cmake --build --preset release --parallel 2
 ctest --preset release --no-tests=error
 
-library="bin/addons/godot_jit/bin/release/libgodot-jit.$platform.$arch.$suffix"
+library="bin/addons/godot_jit/bin/libgodot-jit.$platform.template_release.$arch.$suffix"
 test -s "$library"
 if [[ "$platform" == windows ]]; then
     # A developer's MSYS2 PATH can hide accidental runtime dependencies.
@@ -57,6 +57,6 @@ if [[ "$platform" == windows ]]; then
         exit 1
     fi
 fi
-destination=".build/artifact/addons/godot_jit/bin/release"
+destination=".build/artifact/addons/godot_jit/bin"
 mkdir -p "$destination"
 cp "$library" "$destination/"

@@ -55,9 +55,9 @@ else()
 endif()
 set_target_properties(godot-jit PROPERTIES
     PREFIX "lib"
-    OUTPUT_NAME "godot-jit.${jit_platform}.${jit_arch}"
-    LIBRARY_OUTPUT_DIRECTORY "$<1:${jit_output_dir}/${jit_variant}>"
-    RUNTIME_OUTPUT_DIRECTORY "$<1:${jit_output_dir}/${jit_variant}>")
+    OUTPUT_NAME "godot-jit.${jit_platform}.template_${jit_variant}.${jit_arch}"
+    LIBRARY_OUTPUT_DIRECTORY "$<1:${jit_output_dir}>"
+    RUNTIME_OUTPUT_DIRECTORY "$<1:${jit_output_dir}>")
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_options(godot-jit PRIVATE "LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/exports.map")
     set_property(TARGET godot-jit APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/exports.map")
