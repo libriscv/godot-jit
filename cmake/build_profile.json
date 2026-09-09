@@ -1,0 +1,17 @@
+{
+  "enabled_classes": [
+    "RefCounted",
+    "OS",
+    "Engine",
+    "Node",
+    "ResourceLoader",
+    "ScriptExtension",
+    "ScriptLanguageExtension",
+    "ResourceFormatLoader",
+    "ResourceFormatSaver",
+    "ResourceSaver",
+    "FileAccess",
+    "ProjectSettings",
+    "ClassDB"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+    global: godot_jit_library_init;
+    local: *;
+};

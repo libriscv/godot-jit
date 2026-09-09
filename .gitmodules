@@ -1,0 +1,6 @@
+[submodule "godot-cpp"]
+	path = godot-cpp
+	url = git@github.com:godotengine/godot-cpp.git
+[submodule "godot-sandbox"]
+	path = godot-sandbox
+	url = git@github.com:libriscv/godot-sandbox.git

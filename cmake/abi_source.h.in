@@ -1,0 +1,4 @@
+#pragma once
+inline constexpr const char godot_jit_abi_source[] = R"GODOT_JIT_ABI(
+@GODOT_JIT_ABI_SOURCE@
+)GODOT_JIT_ABI";

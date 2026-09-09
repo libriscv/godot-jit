@@ -1,0 +1,19 @@
+# Every physics frame the game calls think() with:
+#   me        where the players drone is
+#   crystals  the crystals to collect, +10 each
+#   hazards   rotating saws, -5 when hit + respawn
+
+func think(delta: float, me: Vector2, crystals: Array, hazards: Array) -> Vector2:
+	var target := nearest(crystals, me)
+	return (target - me).normalized()
+
+func nearest(points: Array, from: Vector2) -> Vector2:
+	var best := from
+	var best_distance := 1.0e30
+	for point in points:
+		var candidate: Vector2 = point
+		var distance := from.distance_squared_to(candidate)
+		if distance < best_distance:
+			best_distance = distance
+			best = candidate
+	return best

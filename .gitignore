@@ -1,0 +1,4 @@
+/build*/
+/bin/.godot/
+/bin/addons/godot_jit/bin/
+*.uid

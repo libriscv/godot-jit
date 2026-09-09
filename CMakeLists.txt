@@ -1,0 +1,120 @@
+cmake_minimum_required(VERSION 3.24)
+project(godot_jit LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
+option(GODOT_JIT_BUILD_TESTS "Build addon smoke tests" ON)
+set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "Enable C++ exceptions")
+set(GODOTCPP_API_VERSION "4.6" CACHE STRING "Godot API version")
+set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_profile.json"
+    CACHE FILEPATH "Godot bindings used by the addon")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${GODOTCPP_BUILD_PROFILE}")
+add_subdirectory(godot-cpp EXCLUDE_FROM_ALL)
+include(cmake/tinycc.cmake)
+
+# Reuse the host compiler without the sandbox, VM, tools or upstream tests.
+function(add_safegdscript_compiler)
+    set(BUILD_TESTING OFF)
+    set(GDSCRIPT_BUILD_RISCV OFF CACHE BOOL "Build the upstream RISC-V backend")
+    add_subdirectory(godot-sandbox/src/gdscript/compiler safegdscript EXCLUDE_FROM_ALL)
+endfunction()
+add_safegdscript_compiler()
+add_library(godot_jit::safegdscript ALIAS gdscript_frontend)
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/include/godot_jit/abi.h" GODOT_JIT_ABI_SOURCE)
+set(jit_c_abi "${CMAKE_CURRENT_SOURCE_DIR}/godot-sandbox/src/gdscript/compiler/c_abi.h")
+file(READ "${jit_c_abi}" GODOT_JIT_C_ABI_SOURCE)
+string(APPEND GODOT_JIT_ABI_SOURCE "\n${GODOT_JIT_C_ABI_SOURCE}")
+if (DOUBLE_PRECISION OR GODOTCPP_PRECISION STREQUAL "double")
+    string(PREPEND GODOT_JIT_ABI_SOURCE "#define DOUBLE_PRECISION_REAL_T 1\n")
+endif()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS include/godot_jit/abi.h "${jit_c_abi}")
+configure_file(cmake/abi_source.h.in generated/abi_source.h @ONLY)
+
+find_package(Threads REQUIRED)
+add_library(godot_jit_core STATIC src/c_module.cpp)
+target_include_directories(godot_jit_core PUBLIC include PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_link_libraries(godot_jit_core PRIVATE godot_jit_tcc Threads::Threads)
+
+add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp)
+target_include_directories(godot-jit PRIVATE src)
+target_link_libraries(godot-jit PRIVATE godot-cpp godot_jit_core godot_jit::safegdscript)
+get_target_property(jit_platform godot-cpp GODOTCPP_PLATFORM)
+get_target_property(jit_arch godot-cpp GODOTCPP_ARCH)
+set(jit_output_dir "${CMAKE_CURRENT_SOURCE_DIR}/bin/addons/godot_jit/bin")
+if(GODOTCPP_TARGET STREQUAL "template_release")
+    set(jit_variant release)
+else()
+    set(jit_variant debug)
+endif()
+set_target_properties(godot-jit PROPERTIES
+    PREFIX "lib"
+    OUTPUT_NAME "godot-jit.${jit_platform}.${jit_arch}"
+    LIBRARY_OUTPUT_DIRECTORY "$<1:${jit_output_dir}/${jit_variant}>"
+    RUNTIME_OUTPUT_DIRECTORY "$<1:${jit_output_dir}/${jit_variant}>")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_options(godot-jit PRIVATE "LINKER:--version-script=${CMAKE_CURRENT_SOURCE_DIR}/src/exports.map")
+    set_property(TARGET godot-jit APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/exports.map")
+endif()
+
+if(GODOT_JIT_BUILD_TESTS)
+    enable_testing()
+    add_executable(godot_jit_smoke tests/smoke.cpp)
+    target_link_libraries(godot_jit_smoke PRIVATE godot_jit_core godot_jit::safegdscript)
+    add_test(NAME godot_jit_smoke COMMAND godot_jit_smoke)
+    add_executable(godot_jit_c_backend tests/c_backend.cpp)
+    target_link_libraries(godot_jit_c_backend PRIVATE godot_jit_core godot_jit::safegdscript)
+    add_test(NAME godot_jit_c_backend COMMAND godot_jit_c_backend "${CMAKE_CURRENT_BINARY_DIR}/test_backend.c")
+    set_tests_properties(godot_jit_c_backend PROPERTIES FIXTURES_SETUP emitted_c)
+    if (CMAKE_C_COMPILER_ID MATCHES "GNU|Clang|AppleClang")
+        add_test(NAME godot_jit_system_c COMMAND "${CMAKE_C_COMPILER}" -std=c99 -Wall -Wextra
+            -Werror -Wno-unused-parameter -Wno-unused-label -O2
+            -I "${CMAKE_CURRENT_SOURCE_DIR}/godot-sandbox/src/gdscript/compiler"
+            "${CMAKE_CURRENT_BINARY_DIR}/test_backend.c" "${CMAKE_CURRENT_SOURCE_DIR}/tests/system_c_host.c"
+            -o "${CMAKE_CURRENT_BINARY_DIR}/test_backend${CMAKE_EXECUTABLE_SUFFIX}")
+        set_tests_properties(godot_jit_system_c PROPERTIES FIXTURES_REQUIRED emitted_c FIXTURES_SETUP system_c)
+        add_test(NAME godot_jit_system_c_run COMMAND "${CMAKE_CURRENT_BINARY_DIR}/test_backend${CMAKE_EXECUTABLE_SUFFIX}")
+        set_tests_properties(godot_jit_system_c_run PROPERTIES FIXTURES_REQUIRED system_c)
+    endif()
+    find_program(GODOT_JIT_GODOT_EXECUTABLE NAMES godot godot4)
+    if(GODOT_JIT_GODOT_EXECUTABLE)
+        # Exercise this build's binary, including Release under a debug editor.
+        set(jit_test_project "${CMAKE_CURRENT_BINARY_DIR}/test-project/$<CONFIG>")
+        file(GENERATE OUTPUT "${jit_test_project}/project.godot" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/project.godot")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/smoke.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/smoke.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/godot_jit.gdextension" CONTENT
+            "[configuration]\nentry_symbol = \"godot_jit_library_init\"\ncompatibility_minimum = \"4.6\"\n\n[libraries]\n${jit_platform}.${jit_arch} = \"$<TARGET_FILE:godot-jit>\"\n")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/language.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/language.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/call_benchmark.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/call_benchmark.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/typical_benchmark.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/typical_benchmark.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/typical.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/typical.ugd")
+        # Load at startup. Discovering a new extension mid-import restarts the
+        # editor, whose cleanup can race deferred docs generation in Godot 4.6/4.7.
+        file(GENERATE OUTPUT "${jit_test_project}/.godot/extension_list.cfg"
+            CONTENT "res://godot_jit.gdextension\n")
+        add_test(NAME godot_jit_import COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --import)
+        set_tests_properties(godot_jit_import PROPERTIES FIXTURES_SETUP godot_jit_import TIMEOUT 60)
+        add_test(NAME godot_jit_extension COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/smoke.gd)
+        set_tests_properties(godot_jit_extension PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        add_test(NAME godot_jit_backend COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/backend.gd)
+        set_tests_properties(godot_jit_backend PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        add_test(NAME godot_jit_language COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/language.gd)
+        set_tests_properties(godot_jit_language PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 60)
+        add_test(NAME godot_jit_typical COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/typical_benchmark.gd -- --check-only)
+        set_tests_properties(godot_jit_typical PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        set_tests_properties(godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_typical PROPERTIES ENVIRONMENT
+            "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
+    endif()
+endif()
