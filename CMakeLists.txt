@@ -91,7 +91,9 @@ if(GODOT_JIT_BUILD_TESTS)
         file(GENERATE OUTPUT "${jit_test_project}/godot_jit.gdextension" CONTENT
             "[configuration]\nentry_symbol = \"godot_jit_library_init\"\ncompatibility_minimum = \"4.6\"\n\n[libraries]\n${jit_platform}.${jit_arch} = \"$<TARGET_FILE:godot-jit>\"\n")
         file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
-        file(GENERATE OUTPUT "${jit_test_project}/tests/language.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/language.gd")
+        # The reload fixture edits embedded source using LF-delimited matches.
+        # file(GENERATE) otherwise writes native CRLF on Windows, even with LF input.
+        file(GENERATE OUTPUT "${jit_test_project}/tests/language.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/language.gd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/call_benchmark.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/call_benchmark.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/typical_benchmark.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/typical_benchmark.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/typical.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/typical.ugd")

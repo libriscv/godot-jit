@@ -121,7 +121,9 @@ func _to_string() -> String:
     script.source_code = source + "\nvar broken_initializer = divide(0)\nfunc divide(n):\n    return 1 / n\n"
     check(script.reload(true) != OK, "Runtime initializer failure rejects reload")
     check(a.total == 22 and b.total == 10, "Failed initializer restores instance state")
-    script.source_code = source.replace("return total\nfunc twice", "return total + 1000\nfunc twice")
+    var reloaded_source = source.replace("return total\nfunc twice", "return total + 1000\nfunc twice")
+    check(reloaded_source != source, "Reload fixture changes the source")
+    script.source_code = reloaded_source
     check(script.reload(true) == OK, "Reload preserving state")
     check(a.total == 22 and b.total == 10, "Reload preserves each object's members")
     check(a.shared == 5, "Reload preserves statics")
