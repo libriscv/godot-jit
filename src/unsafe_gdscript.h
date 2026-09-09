@@ -84,7 +84,7 @@ class UnsafeGDScriptInstance : public ScriptInstanceExtension {
     std::shared_ptr<NativeState> state;
     bool placeholder = false;
     bool static_dispatch = false;
-    Dictionary placeholder_values;
+    mutable Dictionary placeholder_values;
     Dictionary fields;
     void *native_instance = nullptr;
     void *create_native() {

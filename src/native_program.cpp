@@ -36,6 +36,7 @@ std::shared_ptr<NativeProgram> NativeProgram::compile(const String &source, cons
         p->source_path = String::utf8(options.source_path.c_str());
         p->debug_info = options.debug_info || options.debug_step_points || !options.breakpoint_lines.empty();
         p->ir = std::move(*ir);
+        p->property_defaults = native_property_defaults(source, options, p->ir);
         // Hidden accessors/lambdas publish only their name upstream. Their IR
         // still carries the complete ABI, including synthetic capture/self slots.
         for (size_t i = 0; i < p->ir.functions.size(); ++i) {

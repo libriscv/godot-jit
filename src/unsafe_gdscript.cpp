@@ -228,6 +228,7 @@ TypedArray<Dictionary> UnsafeGDScript::_get_script_signal_list() const {
     return a;
 }
 bool UnsafeGDScript::_has_property_default_value(const StringName &n) const {
+    if (program && program->property_defaults.has(n)) return true;
     if (program)
         for (auto &p : program->ir.properties)
             if (str(p.name) == String(n))
@@ -235,6 +236,8 @@ bool UnsafeGDScript::_has_property_default_value(const StringName &n) const {
     return false;
 }
 Variant UnsafeGDScript::_get_property_default_value(const StringName &n) const {
+    if (program && program->property_defaults.has(n))
+        return Variant(program->property_defaults[n]).duplicate(true);
     if (program)
         for (auto &p : program->ir.properties)
             if (str(p.name) == String(n))
@@ -619,7 +622,9 @@ bool UnsafeGDScriptInstance::get(const StringName &n, Variant &v) const {
         if (static_dispatch && !g.is_static)
             return false;
         if (placeholder) {
-            v = placeholder_values.has(n) ? placeholder_values[n] : resource->_get_property_default_value(n);
+            if (!placeholder_values.has(n))
+                placeholder_values[n] = resource->_get_property_default_value(n);
+            v = placeholder_values[n];
             return true;
         }
         if (!g.getter_function.empty()) {

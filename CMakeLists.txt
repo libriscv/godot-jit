@@ -42,7 +42,7 @@ add_library(godot_jit_core STATIC src/c_module.cpp)
 target_include_directories(godot_jit_core PUBLIC include PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(godot_jit_core PRIVATE godot_jit_tcc Threads::Threads)
 
-add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp src/unsafe_debugger.cpp src/unsafe_highlighter.cpp src/unsafe_editor.cpp)
+add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/property_defaults.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp src/unsafe_debugger.cpp src/unsafe_highlighter.cpp src/unsafe_editor.cpp)
 target_include_directories(godot-jit PRIVATE src)
 target_link_libraries(godot-jit PRIVATE godot-cpp godot_jit_core godot_jit::safegdscript)
 get_target_property(jit_platform godot-cpp GODOTCPP_PLATFORM)
