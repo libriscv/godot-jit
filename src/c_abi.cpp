@@ -178,8 +178,10 @@ extern "C" void gj_destroy(GJVariant *v) {
 }
 extern "C" int gj_truth(const GJVariant *v) { return value(v).booleanize(); }
 extern "C" int gj_fail(GJContext *ctx, const char *message) {
-    if (!ctx->failed && ctx->error) *static_cast<std::string *>(ctx->error) = message;
+    const bool first = !ctx->failed;
+    if (first && ctx->error) *static_cast<std::string *>(ctx->error) = message;
     ctx->failed = 1;
+    if (first && ctx->debug) ctx->debug(ctx, nullptr, GJ_DEBUG_ERROR);
     return 0;
 }
 extern "C" int gj_array_next(GJContext *ctx, GJVariant *item, GJVariant *array, GJInt index) {

@@ -26,6 +26,27 @@ extern "C" int scalar_op(GJContext *ctx, int op, GJVariant *d, GJVariant *, cons
     return scalar_fail(ctx, "Unexpected scalar test host operation");
 }
 void check(bool condition, const std::string &error) { if (!condition) throw std::runtime_error(error); }
+struct DebugCheck {
+    const gdscript::IRProgram *ir;
+    int depth = 0;
+    int stops = 0;
+    bool local_visible = false;
+};
+void debug_hook(GJContext *ctx, GJDebugFrame *frame, int event) {
+    auto &test = *static_cast<DebugCheck *>(ctx->runtime);
+    if (event == GJ_DEBUG_ENTER) ++test.depth;
+    if (event == GJ_DEBUG_EXIT) --test.depth;
+    if (event == GJ_DEBUG_BREAKPOINT) {
+        ++test.stops;
+        for (const auto &local : test.ir->functions[frame->function].debug_locals) {
+            if (local.name == "copied" && size_t(frame->instruction) >= local.begin_instruction &&
+                size_t(frame->instruction) < local.end_instruction) {
+                const auto *value = frame->locals[local.register_num];
+                test.local_visible = test.depth == 2 && value->type == 2 && value->data.i == 42;
+            }
+        }
+    }
+}
 int main(int argc, char **argv) try {
     const std::string script = R"(func sum(n: int) -> int:
     var total: int = 0
@@ -85,6 +106,29 @@ func divide(n: int) -> int:
     check(!compiler.compile_to_c("func suspended(value):\n    return await value\n") &&
           compiler.get_error().find("AWAIT") != std::string::npos, "Missing unsupported async diagnostic");
     check(!compiler.compile_to_c("func broken("), "Accepted invalid frontend input");
+    const std::string debug_script = "func outer(n: int):\n    return inner(n)\nfunc inner(n: int):\n    var copied = n\n    breakpoint\n    return copied\n";
+    auto plain = compiler.compile_to_c(debug_script);
+    check(plain && plain->find("debug_frame") == std::string::npos, "Non-debug output gained instrumentation");
+    gdscript::CompilerOptions debug_options;
+    debug_options.optimize = false;
+    debug_options.batch_iteration = false;
+    debug_options.debug_info = true;
+    auto debug_ir = compiler.compile_to_ir(debug_script, debug_options);
+    auto debug_source = compiler.compile_to_c(debug_script, debug_options);
+    check(debug_ir && debug_source && debug_source->find("GJ_DEBUG_BREAKPOINT") != std::string::npos,
+          "Requested C debug info was omitted");
+    auto debug_module = godot_jit::CModule::compile(*debug_source, error, symbols, "gj_entry");
+    check(bool(debug_module), error);
+    auto debug_entry = reinterpret_cast<GJEntry>(debug_module->symbol("gj_entry"));
+    DebugCheck debug{&*debug_ir};
+    context = {};
+    context.error = &error;
+    context.runtime = &debug;
+    context.debug = &debug_hook;
+    input.data.i = 42;
+    check(debug_entry(&context, 0, &result, args, 1) && result.data.i == 42, "Debug C execution failed");
+    check(debug.stops == 1 && debug.local_visible && debug.depth == 0, "Debug locals/stack lifetime failed");
+    check(!debug_entry(&context, 0, &result, args, 0) && debug.depth == 0, "Failed call leaked a debug frame");
     std::cout << "C backend scalar execution and diagnostics passed\n";
     return 0;
 } catch (const std::exception &e) { std::cerr << e.what() << '\n'; return 1; }

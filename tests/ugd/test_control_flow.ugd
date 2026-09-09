@@ -1,0 +1,68 @@
+extends RefCounted
+
+var effects: int = 0
+
+func touch() -> bool:
+    effects += 1
+    return true
+
+func fibonacci(n: int) -> int:
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+func classify(value) -> String:
+    match value:
+        0:
+            return "zero"
+        1, 2:
+            return "small"
+        _:
+            return "other"
+
+func test_short_circuit() -> bool:
+    var a = false and touch()
+    var b = true or touch()
+    if effects != 0 or a or not b:
+        return false
+    var c = true and touch()
+    var d = false or touch()
+    return c and d and effects == 2
+
+func test_loop_break_continue() -> bool:
+    var total: int = 0
+    for i in range(10):
+        if i == 3:
+            continue
+        total += i
+        if i == 6:
+            break
+    return total == 18
+
+func test_nested_while_and_reverse_range() -> bool:
+    var total: int = 0
+    for i in range(5, 0, -2):
+        var j: int = 0
+        while j < i:
+            j += 1
+            if j == 2:
+                continue
+            total += j
+    return total == 18
+
+func test_recursion_and_match() -> bool:
+    return fibonacci(10) == 55 and classify(0) == "zero" and classify(2) == "small" and classify(7) == "other"
+
+func test_variant_loop_type_changes() -> bool:
+    var value: Variant = "initial"
+    for i in range(6):
+        if i & 1:
+            value = i
+        else:
+            value = str(i)
+    return value is int and value == 5
+
+func test_integer_precision() -> bool:
+    var large: int = 9007199254740993
+    var dynamic: Variant = large
+    return dynamic == large and dynamic > large - 1 and dynamic < large + 1 and (large & 1) == 1

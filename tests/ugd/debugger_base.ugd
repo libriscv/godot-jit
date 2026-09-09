@@ -1,0 +1,5 @@
+extends RefCounted
+func inherited(value: int):
+    var base_local = value + 10
+    breakpoint
+    return base_local

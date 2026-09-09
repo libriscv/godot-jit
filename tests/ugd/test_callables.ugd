@@ -1,0 +1,43 @@
+extends RefCounted
+
+signal changed(value: int)
+var total: int = 0
+var observed: Array = []
+
+func increment(amount: int = 1) -> int:
+    total += amount
+    return total
+
+func observe(value: int):
+    observed.append(value)
+
+func make_closure(bias: int) -> Callable:
+    return func(value: int) -> int: return increment(value) + bias
+
+func test_method_callable_and_defaults() -> bool:
+    var callback: Callable = increment
+    return callback == increment and callback.call() == 1 and callback.call(4) == 5 and total == 5
+
+func test_captured_lambda_lifetime() -> bool:
+    var first = make_closure(10)
+    var second = make_closure(100)
+    return first.call(2) == 12 and second.call(3) == 105 and first.call(1) == 16
+
+func test_lambda_default_argument() -> bool:
+    var callback = func(value: int = 4) -> int: return value * 2
+    return callback.call() == 8 and callback.call(7) == 14
+
+func test_signal_connect_emit_disconnect() -> bool:
+    changed.connect(observe)
+    changed.emit(7)
+    changed.emit(11)
+    changed.disconnect(observe)
+    changed.emit(99)
+    return observed == [7, 11]
+
+func test_callable_in_loop() -> bool:
+    var callback: Callable = increment
+    var sum: int = 0
+    for i in range(4):
+        sum += callback.call()
+    return sum == 10 and total == 4

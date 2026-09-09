@@ -1,0 +1,7 @@
+extends "res://tests/ugd/counter_base.ugd"
+
+func _init(start: int = 5):
+    super(start)
+
+func increment(amount: int = 1) -> int:
+    return super.increment(amount) * 2

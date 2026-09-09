@@ -1,0 +1,47 @@
+extends RefCounted
+
+func test_array_alias_and_duplicate() -> bool:
+    var original: Array = [1, 2]
+    var alias = original
+    var copy = original.duplicate()
+    alias.append(3)
+    alias[0] = 9
+    return original == [9, 2, 3] and copy == [1, 2] and original[-1] == 3
+
+func test_nested_dictionary_mutation() -> bool:
+    var data: Dictionary = {"values": [1, 2], "count": 2}
+    data["values"][1] += 5
+    data["count"] += 1
+    var total: int = 0
+    for key in data:
+        if key == "count":
+            total += int(data[key])
+    return data["values"] == [1, 7] and total == 3 and data.get("missing", 42) == 42
+
+func test_unicode_string_iteration() -> bool:
+    var source: String = "hé🙂"
+    var rebuilt: String = ""
+    for character in source:
+        rebuilt += character
+    return rebuilt == source and source.length() == 3 and source[-1] == "🙂" and source.to_upper() == "HÉ🙂"
+
+func test_packed_array_alias_and_duplicate() -> bool:
+    var original = PackedInt32Array([1, 2, 3])
+    var alias = original
+    var copy = original.duplicate()
+    alias[1] = 7
+    return original == PackedInt32Array([1, 7, 3]) and copy == PackedInt32Array([1, 2, 3])
+
+func test_vector_copy_and_member_assignment() -> bool:
+    var original = Vector2(3, 4)
+    var copy = original
+    copy.x = 9.0
+    return original == Vector2(3, 4) and copy == Vector2(9, 4) and original.length() == 5.0 and original.distance_squared_to(Vector2.ZERO) == 25.0
+
+func test_empty_iteration_and_membership() -> bool:
+    var count: int = 0
+    for item in []:
+        count += 1
+    for key in {}:
+        count += 1
+    return count == 0 and 2 in [1, 2, 3] and "key" in {"key": 1} and not 4 in [1, 2, 3]

@@ -1,6 +1,7 @@
 #include "unsafe_gdscript.h"
 #include "script_dicts.h"
 #include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/engine_debugger.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
@@ -248,10 +249,11 @@ int32_t UnsafeGDScript::_get_member_line(const StringName &n) const {
     return i >= 0 ? program->ir.globals[i].declaration_line : -1;
 }
 Dictionary UnsafeGDScript::_get_constants() const {
+    return program ? unsafe_constants(program->ir) : Dictionary();
+}
+Dictionary unsafe_constants(const gdscript::IRProgram &ir) {
     Dictionary d;
-    if (!program)
-        return d;
-    for (auto &c : program->ir.constants) {
+    for (auto &c : ir.constants) {
         Variant v;
         using K = gdscript::ScriptConstant::Kind;
         switch (c.kind) {
@@ -301,6 +303,7 @@ Variant UnsafeGDScript::_get_rpc_config() const {
 Error unsafe_compiler_options(const String &source, const String &source_path, gdscript::CompilerOptions &options,
                               String &error) {
     options.native_classes = true;
+    options.debug_info = EngineDebugger::get_singleton()->is_active();
     options.optimize = false;
     options.batch_iteration = false;
     options.source_path = source_path.utf8().get_data();
@@ -447,15 +450,15 @@ Error UnsafeGDScript::_reload(bool keep) {
             instance->set(keys[i], snapshot.second[keys[i]]);
     }
     // Script resources themselves dispatch static methods, as GDScript does.
-    gdextension_interface::object_set_script_instance(_owner, ScriptInstanceExtension::create_native_instance(memnew(
-                                                                  UnsafeGDScriptInstance(this, this, false, true))));
+    gdextension_interface::object_set_script_instance(_owner,
+        memnew(UnsafeGDScriptInstance(this, this, false, true))->create_native());
     return OK;
 }
 void *UnsafeGDScript::_instance_create(Object *owner) const {
     if (!program || !owner || !owner->is_class(_get_instance_base_type()))
         return nullptr;
     auto *instance = memnew(UnsafeGDScriptInstance(owner, const_cast<UnsafeGDScript *>(this)));
-    void *native = ScriptInstanceExtension::create_native_instance(instance);
+    void *native = instance->create_native();
     gdextension_interface::object_set_script_instance(owner->_owner, native);
     Variant result;
     GDExtensionCallError error{};
@@ -471,8 +474,7 @@ void *UnsafeGDScript::_instance_create(Object *owner) const {
     return native;
 }
 void *UnsafeGDScript::_placeholder_instance_create(Object *owner) const {
-    return ScriptInstanceExtension::create_native_instance(
-        memnew(UnsafeGDScriptInstance(owner, const_cast<UnsafeGDScript *>(this), true)));
+    return memnew(UnsafeGDScriptInstance(owner, const_cast<UnsafeGDScript *>(this), true))->create_native();
 }
 bool UnsafeGDScript::_instance_has(Object *owner) const {
     for (auto *i : instances)
@@ -552,14 +554,21 @@ UnsafeGDScriptInstance::~UnsafeGDScriptInstance() {
 }
 bool UnsafeGDScriptInstance::set(const StringName &n, const Variant &v) {
     if (!resource->nested_name.is_empty()) {
-        if (!fields.has(n) || String(n).begins_with("@"))
-            return false;
-        fields[n] = v;
-        return true;
+        if (String(n).begins_with("@")) return false;
+        if (fields.has(n)) {
+            fields[n] = v;
+            return true;
+        }
     }
-    int i = resource->property_index(n);
-    if (i < 0)
+    int i = resource->nested_name.is_empty() ? resource->property_index(n) : -1;
+    if (i < 0) {
+        if (!static_dispatch && has_method("_set")) {
+            Variant name = n, result;
+            const Variant *args[] = {&name, &v};
+            return call_hook("_set", args, 2, result) && result.booleanize();
+        }
         return false;
+    }
     const auto &g = state->program->ir.globals[i];
     if (g.is_const || (static_dispatch && !g.is_static))
         return false;
@@ -625,14 +634,62 @@ bool UnsafeGDScriptInstance::get(const StringName &n, Variant &v) const {
         v = Callable(owner, n);
         return true;
     }
+    if (!static_dispatch && has_method("_get")) {
+        Variant name = n;
+        const Variant *args[] = {&name};
+        return call_hook("_get", args, 1, v) && v.get_type() != Variant::NIL;
+    }
     return false;
 }
+std::vector<PropertyInfo> UnsafeGDScriptInstance::properties() const {
+    auto result = resource->properties();
+    if (!static_dispatch && has_method("_get_property_list")) {
+        Variant extra;
+        if (call_hook("_get_property_list", nullptr, 0, extra) && extra.get_type() == Variant::ARRAY) {
+            for (const Variant &entry : Array(extra)) {
+                if (entry.get_type() != Variant::DICTIONARY) continue;
+                Dictionary property = entry;
+                const int type = property.get("type", Variant::NIL);
+                if (!property.has("name") || type < 0 || type >= Variant::VARIANT_MAX) continue;
+                auto info = type_info(type, property["name"], property.get("class_name", String()));
+                info.hint = PropertyHint(int(property.get("hint", PROPERTY_HINT_NONE)));
+                info.hint_string = property.get("hint_string", String());
+                info.usage = property.get("usage", PROPERTY_USAGE_DEFAULT);
+                result.push_back(info);
+            }
+        }
+    }
+    return result;
+}
+bool UnsafeGDScriptInstance::property_can_revert(const StringName &name) const {
+    if (!static_dispatch && has_method("_property_can_revert")) {
+        Variant argument = name, result;
+        const Variant *args[] = {&argument};
+        if (call_hook("_property_can_revert", args, 1, result) && result.booleanize()) return true;
+    }
+    return resource->_has_property_default_value(name);
+}
+bool UnsafeGDScriptInstance::property_get_revert(const StringName &name, Variant &result) const {
+    if (!static_dispatch && has_method("_property_can_revert") && has_method("_property_get_revert")) {
+        Variant argument = name, can_revert;
+        const Variant *args[] = {&argument};
+        if (call_hook("_property_can_revert", args, 1, can_revert) && can_revert.booleanize())
+            return call_hook("_property_get_revert", args, 1, result);
+    }
+    result = resource->_get_property_default_value(name);
+    return resource->_has_property_default_value(name);
+}
+bool UnsafeGDScriptInstance::call_hook(const StringName &name, const Variant **args, int count, Variant &result) const {
+    GDExtensionCallError error{};
+    const_cast<UnsafeGDScriptInstance *>(this)->callp(name, args, count, result, error);
+    return error.error == GDEXTENSION_CALL_OK;
+}
 const GDExtensionPropertyInfo *UnsafeGDScriptInstance::get_property_list(uint32_t *count) const {
-    auto properties = resource->properties();
-    *count = properties.size();
+    auto list_properties = properties();
+    *count = list_properties.size();
     auto *list = memnew_arr(GDExtensionPropertyInfo, *count);
     for (uint32_t i = 0; i < *count; ++i)
-        list[i] = native_property(properties[i]);
+        list[i] = native_property(list_properties[i]);
     return list;
 }
 void UnsafeGDScriptInstance::free_property_list(const GDExtensionPropertyInfo *list, uint32_t count) const {
@@ -642,7 +699,7 @@ void UnsafeGDScriptInstance::free_property_list(const GDExtensionPropertyInfo *l
         memdelete_arr(list);
 }
 Variant::Type UnsafeGDScriptInstance::get_property_type(const StringName &n, bool *valid) const {
-    for (auto &p : resource->properties())
+    for (auto &p : properties())
         if (p.name == n) {
             *valid = true;
             return p.type;
@@ -651,7 +708,7 @@ Variant::Type UnsafeGDScriptInstance::get_property_type(const StringName &n, boo
     return Variant::NIL;
 }
 void UnsafeGDScriptInstance::get_property_state(GDExtensionScriptInstancePropertyStateAdd add, void *data) {
-    for (auto &p : resource->properties()) {
+    for (auto &p : properties()) {
         Variant v;
         if ((p.usage & PROPERTY_USAGE_STORAGE) && get(p.name, v))
             add(&p.name, &v, data);
@@ -674,6 +731,8 @@ const GDExtensionMethodInfo *UnsafeGDScriptInstance::get_method_list(uint32_t *c
         for (uint32_t j = 0; j < n.argument_count; ++j)
             n.arguments[j] = native_property(m.arguments[j]);
         n.default_argument_count = m.default_arguments.size();
+        // ScriptInstance's MethodInfo constructor reads contiguous Variants,
+        // despite GDExtensionMethodInfo declaring this as a pointer array.
         auto *defaults = memnew_arr(Variant, n.default_argument_count);
         for (uint32_t j = 0; j < n.default_argument_count; ++j)
             defaults[j] = m.default_arguments[j];
@@ -723,8 +782,13 @@ void UnsafeGDScriptInstance::callp(const StringName &n, const Variant **a, int c
             args.push_back(a[i]);
         active->call(str(active->program->ir.functions[index].name), args.data(), args.size(), r, e);
     }
-    if (!active->error.empty())
+    if (!active->error.empty()) {
         ERR_PRINT(str(active->error));
+        // A runtime fault was already reported at its native frame. The method
+        // exists: avoid a misleading "nonexistent function" break in its caller.
+        e.error = GDEXTENSION_CALL_OK;
+        r = Variant();
+    }
 }
 void UnsafeGDScriptInstance::notification(int what, bool) {
     if (has_method("_notification")) {

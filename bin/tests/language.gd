@@ -106,6 +106,35 @@ func _to_string() -> String:
     check(observed == [91], "Synchronous signal and GDScript callback")
     check(script.shared_add() == 1 and b.shared_add(4) == 5 and a.shared == 5, "Shared statics and static methods")
     check(str(a) == "unsafe:21", "String conversion")
+    var dynamic_script = compile_source("""extends RefCounted
+var stored: int = 12
+func _get(property: StringName):
+    if property == &"dynamic_value":
+        return stored
+    return null
+func _set(property: StringName, value) -> bool:
+    if property == &"dynamic_value":
+        stored = value
+        return true
+    return false
+func _get_property_list() -> Array:
+    return [{"name": "dynamic_value", "type": TYPE_INT, "usage": PROPERTY_USAGE_DEFAULT}]
+func _property_can_revert(property: StringName) -> bool:
+    return property == &"dynamic_value"
+func _property_get_revert(property: StringName):
+    return 12
+""")
+    if dynamic_script:
+        var dynamic = dynamic_script.new()
+        check(dynamic.get("dynamic_value") == 12, "Dynamic property getter")
+        dynamic.set("dynamic_value", 91)
+        check(dynamic.get("dynamic_value") == 91, "Dynamic property setter")
+        check(dynamic.get_property_list().any(func(p): return p.name == "dynamic_value" and p.type == TYPE_INT), "Dynamic property list")
+        check(dynamic.property_can_revert("dynamic_value") and dynamic.property_get_revert("dynamic_value") == 12, "Dynamic property revert")
+    var defaults_script = compile_source("func defaults(a: String = \"hello\", b: Array = [], c: int = 23):\n    return a\n")
+    if defaults_script:
+        var defaults = defaults_script.new().get_method_list().filter(func(m): return m.name == "defaults")
+        check(defaults.size() == 1 and defaults[0].default_args == ["hello", [], 23], "Contiguous mixed method defaults ABI")
     # Match the baseline through the same object call boundary.
     var gd = GDScript.new()
     gd.source_code = source

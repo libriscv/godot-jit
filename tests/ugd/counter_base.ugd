@@ -1,0 +1,11 @@
+extends RefCounted
+
+var total: int = 0
+var values: Array = []
+
+func _init(start: int = 3):
+    total = start
+
+func increment(amount: int = 1) -> int:
+    total += amount
+    return total

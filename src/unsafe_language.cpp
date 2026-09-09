@@ -1,4 +1,6 @@
 #include "unsafe_gdscript.h"
+#include "unsafe_debugger.h"
+#include "unsafe_highlighter.h"
 #include <c_codegen.h>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/file_access.hpp>
@@ -24,17 +26,17 @@ class UnsafeGDScriptLanguage : public ScriptLanguageExtension {
     void _init() override {}
     void _finish() override {}
     PackedStringArray _get_reserved_words() const override {
-        return String("and as assert break breakpoint class class_name const continue elif else enum extends false for "
+        return String("and as assert await break breakpoint class class_name const continue elif else enum extends false for "
                       "func if in is match not null or pass preload return self setget signal static super true var "
-                      "void while")
+                      "void while trait trait_name uses struct when switch yield INF NAN PI TAU")
             .split(" ");
     }
     bool _is_control_flow_keyword(const String &s) const override {
-        return String("break continue elif else for if match return while").split(" ").has(s);
+        return String("break continue elif else for if match pass return switch when while").split(" ").has(s);
     }
     PackedStringArray _get_comment_delimiters() const override { return strings("#"); }
     PackedStringArray _get_doc_comment_delimiters() const override { return strings("##"); }
-    PackedStringArray _get_string_delimiters() const override { return strings("\" \"", "' '", "\"\"\" \"\"\""); }
+    PackedStringArray _get_string_delimiters() const override { return strings("\" \"", "' '", "\"\"\" \"\"\"", "''' '''"); }
     Ref<Script> _make_template(const String &, const String &, const String &base) const override {
         Ref<UnsafeGDScript> s;
         s.instantiate();
@@ -118,17 +120,25 @@ class UnsafeGDScriptLanguage : public ScriptLanguageExtension {
     void _remove_named_global_constant(const StringName &) override {}
     void _thread_enter() override {}
     void _thread_exit() override {}
-    String _debug_get_error() const override { return {}; }
-    int32_t _debug_get_stack_level_count() const override { return 0; }
-    int32_t _debug_get_stack_level_line(int32_t) const override { return 0; }
-    String _debug_get_stack_level_function(int32_t) const override { return {}; }
-    String _debug_get_stack_level_source(int32_t) const override { return {}; }
-    Dictionary _debug_get_stack_level_locals(int32_t, int32_t, int32_t) override { return {}; }
-    Dictionary _debug_get_stack_level_members(int32_t, int32_t, int32_t) override { return {}; }
-    void *_debug_get_stack_level_instance(int32_t) override { return nullptr; }
-    Dictionary _debug_get_globals(int32_t, int32_t) override { return {}; }
-    String _debug_parse_stack_level_expression(int32_t, const String &, int32_t, int32_t) override { return {}; }
-    TypedArray<Dictionary> _debug_get_current_stack_info() override { return {}; }
+    String _debug_get_error() const override { return UnsafeDebugger::error(); }
+    int32_t _debug_get_stack_level_count() const override { return UnsafeDebugger::count(); }
+    int32_t _debug_get_stack_level_line(int32_t level) const override { return UnsafeDebugger::line(level); }
+    String _debug_get_stack_level_function(int32_t level) const override { return UnsafeDebugger::function(level); }
+    String _debug_get_stack_level_source(int32_t level) const override { return UnsafeDebugger::source(level); }
+    Dictionary _debug_get_stack_level_locals(int32_t level, int32_t items, int32_t depth) override {
+        return UnsafeDebugger::variables(level, "locals", items, depth);
+    }
+    Dictionary _debug_get_stack_level_members(int32_t level, int32_t items, int32_t depth) override {
+        return UnsafeDebugger::variables(level, "members", items, depth);
+    }
+    void *_debug_get_stack_level_instance(int32_t level) override { return UnsafeDebugger::instance(level); }
+    Dictionary _debug_get_globals(int32_t items, int32_t depth) override {
+        return UnsafeDebugger::variables(0, "globals", items, depth);
+    }
+    String _debug_parse_stack_level_expression(int32_t level, const String &expression, int32_t items, int32_t depth) override {
+        return UnsafeDebugger::expression(level, expression, items, depth);
+    }
+    TypedArray<Dictionary> _debug_get_current_stack_info() override { return UnsafeDebugger::stack(); }
     void _reload_all_scripts() override {
         // Hold resources while reloading: releasing a dependency can remove it.
         auto scripts = UnsafeGDScript::live_scripts();
@@ -204,7 +214,8 @@ class UnsafeGDScriptLoader : public ResourceFormatLoader {
         s->_set_source_code(file->get_as_text());
         if (s->_reload(false) != OK) {
             ERR_PRINT(s->get_compile_error());
-            return ERR_PARSE_ERROR;
+            // Keep broken source editable; runtime loads still fail normally.
+            if (!Engine::get_singleton()->is_editor_hint()) return ERR_PARSE_ERROR;
         }
         return s;
     }
@@ -241,6 +252,7 @@ ScriptLanguageExtension *unsafe_language() {
 }
 void initialize_unsafe_language() {
     ClassDB::register_class<UnsafeGDScript>();
+    ClassDB::register_class<UnsafeGDScriptCodeHighlighter>();
     ClassDB::register_class<UnsafeGDScriptLanguage>();
     ClassDB::register_class<UnsafeGDScriptLoader>();
     ClassDB::register_class<UnsafeGDScriptSaver>();

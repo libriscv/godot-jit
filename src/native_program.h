@@ -1,6 +1,7 @@
 #pragma once
 #include <c_abi.h>
 #include <compiler.h>
+#include <ir.h>
 #include <godot_cpp/core/object.hpp>
 #include <godot_cpp/templates/hash_map.hpp>
 #include <godot_cpp/variant/variant.hpp>
@@ -14,6 +15,8 @@ struct NativeProgram {
     std::unique_ptr<godot_jit::CModule> module;
     gdscript::IRProgram ir;
     std::string generated;
+    String source_path;
+    bool debug_info = false;
     std::unordered_map<std::string, int> functions;
     HashMap<StringName, int> methods;
     std::unordered_map<std::string_view, StringName> names;

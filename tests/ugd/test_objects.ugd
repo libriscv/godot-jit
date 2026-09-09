@@ -1,0 +1,58 @@
+extends RefCounted
+
+var bounded: int = 0:
+    set(value):
+        bounded = clampi(value, 0, 10)
+    get:
+        return bounded
+
+class Counter:
+    var count: int = 0
+    func _init(start: int = 1):
+        count = start
+    func increment(amount: int = 1) -> int:
+        count += amount
+        return count
+
+class Child extends Counter:
+    func increment(amount: int = 1) -> int:
+        return super.increment(amount) + 100
+
+func test_property_accessors() -> bool:
+    bounded = 30
+    if bounded != 10:
+        return false
+    bounded = -4
+    return bounded == 0
+
+func test_nested_class_inheritance() -> bool:
+    var counter = Counter.new(4)
+    var child = Child.new(7)
+    return counter is Counter and counter.increment() == 5 and child.increment(2) == 109 and counter.count == 5
+
+func test_file_inheritance_and_instance_isolation() -> bool:
+    var script = load("res://tests/ugd/counter_child.ugd")
+    var first = script.new()
+    var second = script.new(10)
+    first.values.append("first")
+    return first.increment(3) == 16 and second.increment() == 22 and first.total == 8 and second.values.is_empty()
+
+func test_native_object_and_metadata() -> bool:
+    var node = Node.new()
+    node.name = "Fixture"
+    node.set_meta("answer", 42)
+    var child = Node.new()
+    child.name = "Child"
+    node.add_child(child)
+    var ok = node.name == &"Fixture" and node.get_meta("answer") == 42 and node.get_node("Child") == child
+    node.free()
+    return ok
+
+func make_owned_values() -> Array:
+    var object = RefCounted.new()
+    object.set_meta("value", "alive")
+    return [object, {"message": "retained"}, PackedInt32Array([1, 2])]
+
+func test_owned_return_values() -> bool:
+    var values = make_owned_values()
+    return is_instance_valid(values[0]) and values[0].get_meta("value") == "alive" and values[1]["message"] == "retained" and values[2] == PackedInt32Array([1, 2])

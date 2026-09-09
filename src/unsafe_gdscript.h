@@ -86,6 +86,11 @@ class UnsafeGDScriptInstance : public ScriptInstanceExtension {
     bool static_dispatch = false;
     Dictionary placeholder_values;
     Dictionary fields;
+    void *native_instance = nullptr;
+    void *create_native() {
+        native_instance = ScriptInstanceExtension::create_native_instance(this);
+        return native_instance;
+    }
     UnsafeGDScriptInstance(Object *, UnsafeGDScript *, bool = false, bool = false);
     ~UnsafeGDScriptInstance() override;
     bool set(const StringName &, const Variant &) override;
@@ -94,11 +99,8 @@ class UnsafeGDScriptInstance : public ScriptInstanceExtension {
     void free_property_list(const GDExtensionPropertyInfo *, uint32_t) const override;
     Variant::Type get_property_type(const StringName &, bool *) const override;
     bool validate_property(GDExtensionPropertyInfo &) const override { return false; }
-    bool property_can_revert(const StringName &n) const override { return resource->_has_property_default_value(n); }
-    bool property_get_revert(const StringName &n, Variant &v) const override {
-        v = resource->_get_property_default_value(n);
-        return property_can_revert(n);
-    }
+    bool property_can_revert(const StringName &) const override;
+    bool property_get_revert(const StringName &, Variant &) const override;
     Object *get_owner() override { return owner; }
     void get_property_state(GDExtensionScriptInstancePropertyStateAdd, void *) override;
     const GDExtensionMethodInfo *get_method_list(uint32_t *) const override;
@@ -119,10 +121,15 @@ class UnsafeGDScriptInstance : public ScriptInstanceExtension {
         return v;
     }
     ScriptLanguage *_get_language() override { return resource->_get_language(); }
+    std::vector<PropertyInfo> properties() const;
+    bool call_hook(const StringName &, const Variant **, int, Variant &) const;
 };
 Error unsafe_compiler_options(const String &, const String &, gdscript::CompilerOptions &, String &);
+Dictionary unsafe_constants(const gdscript::IRProgram &);
 ScriptLanguageExtension *unsafe_language();
 void initialize_unsafe_language();
 void uninitialize_unsafe_language();
+void initialize_unsafe_editor();
+void uninitialize_unsafe_editor();
 Variant bind_native_class(GJContext *, const String &, const Variant &);
 } // namespace godot

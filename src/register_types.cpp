@@ -8,8 +8,10 @@ void initialize(godot::ModuleInitializationLevel level) {
         godot::ClassDB::register_class<godot::GodotJIT>();
         godot::initialize_unsafe_language();
     }
+    if (level == godot::MODULE_INITIALIZATION_LEVEL_EDITOR) godot::initialize_unsafe_editor();
 }
 void uninitialize(godot::ModuleInitializationLevel level) {
+    if (level == godot::MODULE_INITIALIZATION_LEVEL_EDITOR) godot::uninitialize_unsafe_editor();
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) godot::uninitialize_unsafe_language();
 }
 }

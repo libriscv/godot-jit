@@ -1,0 +1,3 @@
+extends "res://tests/debugger_base.ugd"
+func outer():
+    return inherited(5)

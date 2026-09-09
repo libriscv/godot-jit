@@ -1,0 +1,31 @@
+extends RefCounted
+var member: int = 7
+static var shared: int = 11
+const ANSWER = 42
+func inner(value: int) -> int:
+    var local_value = value + 2
+    breakpoint
+    local_value += 1
+    return local_value + member
+func outer(n: int) -> int:
+    var parent_value = n
+    var result = inner(parent_value)
+    return result + 1
+func looping() -> int:
+    var total: int = 0
+    for i in range(3):
+        total += i
+    return total
+func fail(n: int):
+    var before_error = 99
+    return before_error / n
+func call_other(other):
+    return other.inner(20)
+class Nested:
+    var nested_member: int = 31
+    func inspect() -> int:
+        var nested_local: int = 32
+        breakpoint
+        return nested_member + nested_local
+func nested():
+    return Nested.new().inspect()

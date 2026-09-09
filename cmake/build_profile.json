@@ -12,6 +12,14 @@
     "ResourceSaver",
     "FileAccess",
     "ProjectSettings",
-    "ClassDB"
+    "ClassDB",
+    "EngineDebugger",
+    "EditorPlugin",
+    "EditorInterface",
+    "EditorSettings",
+    "EditorSyntaxHighlighter",
+    "SyntaxHighlighter",
+    "ScriptEditor",
+    "TextEdit"
   ]
 }

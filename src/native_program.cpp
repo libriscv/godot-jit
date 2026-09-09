@@ -1,5 +1,6 @@
 #include "native_program.h"
 #include "unsafe_gdscript.h"
+#include "unsafe_debugger.h"
 #include <c_codegen.h>
 #include <godot_cpp/variant/array.hpp>
 #include <godot_cpp/variant/callable.hpp>
@@ -32,6 +33,8 @@ std::shared_ptr<NativeProgram> NativeProgram::compile(const String &source, cons
             return {};
         }
         auto p = std::make_shared<NativeProgram>();
+        p->source_path = String::utf8(options.source_path.c_str());
+        p->debug_info = options.debug_info || options.debug_step_points || !options.breakpoint_lines.empty();
         p->ir = std::move(*ir);
         // Hidden accessors/lambdas publish only their name upstream. Their IR
         // still carries the complete ABI, including synthetic capture/self slots.
@@ -45,7 +48,7 @@ std::shared_ptr<NativeProgram> NativeProgram::compile(const String &source, cons
                     signature.parameters[j].name = parameters[j];
             }
         }
-        p->generated = gdscript::CCodeGenerator().generate(p->ir);
+        p->generated = gdscript::CCodeGenerator().generate(p->ir, p->debug_info);
         p->module = godot_jit::CModule::compile(p->generated, error, native_symbols(), "gj_entry");
         if (!p->module)
             return {};
@@ -83,7 +86,8 @@ bool NativeState::invoke(int index, const Variant **args, int count, Variant &re
                       &error,
                       0,
                       reinterpret_cast<GJVariant *>(active->statics.data()),
-                      this};
+                      this,
+                      active->debug_info ? &UnsafeDebugger::hook : nullptr};
     error.clear();
     return active->entry(&context, index, reinterpret_cast<GJVariant *>(&result),
                          reinterpret_cast<const GJVariant *const *>(args), count);
