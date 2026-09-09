@@ -38,27 +38,25 @@ unzip -oq "$godot_dir/godot.zip" -d "$godot_dir"
 chmod +x "$godot_dir/$godot_binary"
 "$godot_dir/$godot_binary" --headless --version
 
-for variant in debug release; do
-    cmake --preset "$variant" \
-        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-        -DGODOTCPP_USE_STATIC_CPP=ON \
-        -DGODOT_JIT_BUILD_TESTS=ON \
-        -DGODOT_JIT_GODOT_EXECUTABLE="$godot_dir/$godot_binary"
-    cmake --build --preset "$variant" --parallel 2
-    ctest --preset "$variant" --no-tests=error
+cmake --preset release \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+    -DGODOTCPP_USE_STATIC_CPP=ON \
+    -DGODOT_JIT_BUILD_TESTS=ON \
+    -DGODOT_JIT_GODOT_EXECUTABLE="$godot_dir/$godot_binary"
+cmake --build --preset release --parallel 2
+ctest --preset release --no-tests=error
 
-    library="bin/addons/godot_jit/bin/$variant/libgodot-jit.$platform.$arch.$suffix"
-    test -s "$library"
-    if [[ "$platform" == windows ]]; then
-        # A developer's MSYS2 PATH can hide accidental runtime dependencies.
-        imports=$(objdump -p "$library")
-        if grep -Ei 'DLL Name:.*(libgcc|libstdc\+\+|libwinpthread|libssp|msys-)' <<< "$imports"; then
-            echo 'The addon must load without MinGW/MSYS2 runtime DLLs.' >&2
-            exit 1
-        fi
+library="bin/addons/godot_jit/bin/release/libgodot-jit.$platform.$arch.$suffix"
+test -s "$library"
+if [[ "$platform" == windows ]]; then
+    # A developer's MSYS2 PATH can hide accidental runtime dependencies.
+    imports=$(objdump -p "$library")
+    if grep -Ei 'DLL Name:.*(libgcc|libstdc\+\+|libwinpthread|libssp|msys-)' <<< "$imports"; then
+        echo 'The addon must load without MinGW/MSYS2 runtime DLLs.' >&2
+        exit 1
     fi
-    destination=".build/artifact/addons/godot_jit/bin/$variant"
-    mkdir -p "$destination"
-    cp "$library" "$destination/"
-done
+fi
+destination=".build/artifact/addons/godot_jit/bin/release"
+mkdir -p "$destination"
+cp "$library" "$destination/"

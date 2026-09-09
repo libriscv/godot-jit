@@ -36,7 +36,7 @@ jobs:
         with:
           key: windows-jit-x86_64
           max-size: 300M
-      - name: Build and test debug and release
+      - name: Build and test release
         env:
           CC: gcc
           CXX: g++

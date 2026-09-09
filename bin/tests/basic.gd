@@ -25,5 +25,5 @@ GodotJitInt godot_jit_entry(const GodotJitHost *host, GodotJitInt argument) {
 	if jit.is_compiled():
 		quit(5)
 		return
-	print("Godot JIT extension smoke test passed")
+	print("Godot JIT extension basic test passed")
 	quit(0)

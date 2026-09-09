@@ -24,17 +24,18 @@ def package(root: Path, output: Path) -> None:
     files = []
     for platform, (suffix, architectures) in TARGETS.items():
         for arch in architectures:
+            key = f"{platform}.release.{arch}"
+            path = ADDON / "bin" / "release" / f"libgodot-jit.{platform}.{arch}.{suffix}"
+            expected = f'"res://{path.as_posix()}"'
+            if descriptor["libraries"].get(key) != expected:
+                raise ValueError(f"Unexpected or missing library mapping: {key}")
+            binary = root / path
+            if not binary.is_file() or binary.stat().st_size == 0:
+                raise ValueError(f"Missing or empty library: {binary}")
+            # Use the tested release binary in the editor and exported games.
             for variant in ("debug", "release"):
-                key = f"{platform}.{variant}.{arch}"
-                path = ADDON / "bin" / variant / f"libgodot-jit.{platform}.{arch}.{suffix}"
-                expected = f'"res://{path.as_posix()}"'
-                if descriptor["libraries"].get(key) != expected:
-                    raise ValueError(f"Unexpected or missing library mapping: {key}")
-                binary = root / path
-                if not binary.is_file() or binary.stat().st_size == 0:
-                    raise ValueError(f"Missing or empty library: {binary}")
-                libraries[key] = expected
-                files.append(path)
+                libraries[f"{platform}.{variant}.{arch}"] = expected
+            files.append(path)
 
     # The source descriptor also supports locally built RISC-V. Release ZIPs
     # declare only the architectures actually built and tested by CI.

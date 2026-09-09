@@ -30,7 +30,7 @@ jobs:
         with:
           key: linux-jit-${{ matrix.arch }}
           max-size: 300M
-      - name: Build and test debug and release
+      - name: Build and test release
         env:
           CC: gcc-14
           CXX: g++-14

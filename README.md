@@ -18,17 +18,19 @@ more or less the AOT backend from Godot Sandbox Plus. Still work in progress.
 
 Extract `godot-jit.zip` into your Godot 4.6+ project directory, so the extension
 is at `res://addons/godot_jit/godot_jit.gdextension`, then restart the editor.
-The archive includes debug and release binaries for Linux x86-64/ARM64,
-macOS Intel/Apple Silicon (macOS 11+), and Windows x86-64. Linux binaries are
-built on Ubuntu 24.04 and require a compatible glibc. No separate TinyCC or
-MinGW installation is needed. RISC-V remains available for local builds.
+The archive includes release binaries for use in the editor and exported games
+on Linux x86-64/ARM64, macOS Intel/Apple Silicon (macOS 11+), and Windows x86-64.
+Linux binaries are built on Ubuntu 24.04 and require a compatible glibc. No
+separate TinyCC or MinGW installation is needed. RISC-V remains available for
+local builds.
 
 ## CI and draft releases
 
 The **JIT builds** workflow runs on pull requests, pushes to `main`, and manual
 dispatches. The Linux, macOS and Windows workflows can also run independently.
-Each platform builds both CMake presets and runs the native and headless Godot
-tests using Godot 4.6.3 before uploading its libraries.
+Each platform builds the release CMake preset and runs the native and headless
+Godot tests using Godot 4.6.3 before uploading its libraries. Debug builds and tests
+run locally before commits.
 
 After all platforms pass, packaging validates every required library and creates
 the `godot-jit-addon` workflow artifact containing `godot-jit.zip`. The ZIP starts

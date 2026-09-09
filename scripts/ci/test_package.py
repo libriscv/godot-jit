@@ -18,15 +18,15 @@ class PackageTest(unittest.TestCase):
             "linux.x86_64.so", "linux.arm64.so", "macos.x86_64.dylib",
             "macos.arm64.dylib", "windows.x86_64.dll",
         ):
-            for variant in ("debug", "release"):
-                path = self.root / "addons/godot_jit/bin" / variant / f"libgodot-jit.{target}"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b"test fixture")
-                self.binaries.append(path)
+            path = self.root / "addons/godot_jit/bin/release" / f"libgodot-jit.{target}"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"test fixture")
+            self.binaries.append(path)
 
     def test_drop_in_layout_and_library_paths(self):
         (self.root / "project.godot").write_text("must not ship")
         junk = self.root / "addons/godot_jit/bin/debug/unexpected.dll"
+        junk.parent.mkdir(parents=True, exist_ok=True)
         junk.write_bytes(b"must not ship")
         package(self.root, self.output)
         with zipfile.ZipFile(self.output) as archive:
@@ -39,7 +39,10 @@ class PackageTest(unittest.TestCase):
             descriptor.read_string(archive.read("addons/godot_jit/godot_jit.gdextension").decode())
             self.assertEqual(len(descriptor["libraries"]), 10)
             self.assertEqual(descriptor["configuration"]["entry_symbol"], '"godot_jit_library_init"')
-            for value in descriptor["libraries"].values():
+            for key, value in descriptor["libraries"].items():
+                self.assertIn("/bin/release/", value)
+                if ".debug." in key:
+                    self.assertEqual(value, descriptor["libraries"][key.replace(".debug.", ".release.")])
                 self.assertIn(value.strip('"').removeprefix("res://"), names)
 
     def test_missing_platform_binary_fails_before_archive(self):
