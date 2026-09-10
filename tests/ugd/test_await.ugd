@@ -1,0 +1,61 @@
+extends RefCounted
+
+func echo(value):
+    return await value
+
+func test_immediate() -> bool:
+    return await echo(42) == 42 and await echo("hello") == "hello" and await echo(null) == null
+
+func test_timers_and_locals() -> bool:
+    var tree = Engine.get_main_loop()
+    var values: Array = [2, 3, 5]
+    var total: int = 0
+    for value in values:
+        await tree.create_timer(0.001).timeout
+        total += value
+    return total == 10 and values == [2, 3, 5]
+
+func child(tree, value: int) -> int:
+    await tree.process_frame
+    return value + 1
+
+func test_nested_and_callable() -> bool:
+    var tree = Engine.get_main_loop()
+    var first = await child(tree, 20)
+    var callback = child
+    var second = await callback.call(tree, first)
+    return second == 22
+
+func test_loop_control() -> bool:
+    var tree = Engine.get_main_loop()
+    var total: int = 0
+    for i in range(6):
+        if i == 1:
+            continue
+        await tree.process_frame
+        if i == 4:
+            break
+        total += i
+    return total == 5
+
+func test_async_lambda() -> bool:
+    var bias: int = 41
+    var callback = func(event):
+        await event
+        return bias + 1
+    var tree = Engine.get_main_loop()
+    return await callback.call(tree.process_frame) == 42
+
+class Worker:
+    extends RefCounted
+    var value: int = 40
+    func work(event, amount: int = 2) -> int:
+        await event
+        value += amount
+        return value
+
+func test_nested_class() -> bool:
+    var worker = Worker.new()
+    var tree = Engine.get_main_loop()
+    var answer = await worker.work(tree.process_frame)
+    return answer == 42 and worker.value == 42

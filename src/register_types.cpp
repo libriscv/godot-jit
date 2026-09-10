@@ -5,6 +5,7 @@
 namespace {
 void initialize(godot::ModuleInitializationLevel level) {
     if (level == godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
+        godot::ClassDB::register_class<godot::UnsafeFunctionState>();
         godot::ClassDB::register_class<godot::GodotJIT>();
         godot::initialize_unsafe_language();
     }

@@ -39,8 +39,16 @@ func increment(amount: int = 1) -> int:
     return total
 ```
 
-The language uses SafeGDScript's syntax. `await`, editor completion,
-documentation, and profiler integration are not yet implemented. Maybe more.
+The language uses SafeGDScript's syntax, including `await` for signals, timers,
+and other coroutine calls:
+
+```gdscript
+func delayed_answer() -> int:
+    await get_tree().create_timer(0.1).timeout
+    return 42
+```
+
+Editor completion, documentation, and profiler integration = not yet.
 
 ## Installing the addon
 

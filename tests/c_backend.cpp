@@ -103,8 +103,8 @@ func divide(n: int) -> int:
     context.failed = 0;
     error.clear();
     check(!entry(&context, 1, &result, args, 0) && !error.empty(), "Missing arity diagnostic");
-    check(!compiler.compile_to_c("func suspended(value):\n    return await value\n") &&
-          compiler.get_error().find("AWAIT") != std::string::npos, "Missing unsupported async diagnostic");
+    check(compiler.compile_to_c("func suspended(value):\n    return await value\n").has_value(),
+          "Coroutine compilation failed: " + compiler.get_error());
     check(!compiler.compile_to_c("func broken("), "Accepted invalid frontend input");
     const std::string debug_script = "func outer(n: int):\n    return inner(n)\nfunc inner(n: int):\n    var copied = n\n    breakpoint\n    return copied\n";
     auto plain = compiler.compile_to_c(debug_script);

@@ -42,7 +42,7 @@ add_library(godot_jit_core STATIC src/c_module.cpp)
 target_include_directories(godot_jit_core PUBLIC include PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(godot_jit_core PRIVATE godot_jit_tcc Threads::Threads)
 
-add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/property_defaults.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp src/unsafe_debugger.cpp src/unsafe_highlighter.cpp src/unsafe_editor.cpp)
+add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/function_state.cpp src/property_defaults.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp src/unsafe_debugger.cpp src/unsafe_highlighter.cpp src/unsafe_editor.cpp)
 target_include_directories(godot-jit PRIVATE src)
 target_link_libraries(godot-jit PRIVATE godot-cpp godot_jit_core godot_jit::safegdscript)
 get_target_property(jit_platform godot-cpp GODOTCPP_PLATFORM)
@@ -90,6 +90,7 @@ if(GODOT_JIT_BUILD_TESTS)
         file(GENERATE OUTPUT "${jit_test_project}/tests/basic.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/basic.gd")
         file(GENERATE OUTPUT "${jit_test_project}/godot_jit.gdextension" CONTENT
             "[configuration]\nentry_symbol = \"godot_jit_library_init\"\ncompatibility_minimum = \"4.6\"\n\n[libraries]\n${jit_platform}.${jit_arch} = \"$<TARGET_FILE:godot-jit>\"\n")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/async.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/async.gd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/editor.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/editor.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/debugger_base.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/debugger_base.ugd" NEWLINE_STYLE UNIX)
@@ -130,6 +131,9 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_extension COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/basic.gd)
         set_tests_properties(godot_jit_extension PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        add_test(NAME godot_jit_async COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/async.gd)
+        set_tests_properties(godot_jit_async PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
         add_test(NAME godot_jit_backend COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/backend.gd)
         set_tests_properties(godot_jit_backend PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
@@ -156,7 +160,7 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_typical COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/typical_benchmark.gd -- --check-only)
         set_tests_properties(godot_jit_typical PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
-        set_tests_properties(godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_highlighter godot_jit_editor godot_jit_debugger_remote godot_jit_typical PROPERTIES ENVIRONMENT
+        set_tests_properties(godot_jit_async godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_highlighter godot_jit_editor godot_jit_debugger_remote godot_jit_typical PROPERTIES ENVIRONMENT
             "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
     endif()
 endif()

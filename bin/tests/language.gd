@@ -257,7 +257,8 @@ func step(value: int = 1) -> int:
     check(not standalone_callback.is_valid(), "Standalone Callable invalidation")
     var async_script = UnsafeGDScript.new()
     async_script.source_code = "func suspended(value):\n    return await value\n"
-    check(async_script.reload() != OK and async_script.get_compile_error().contains("AWAIT"), "Async rejected explicitly")
+    check(async_script.reload() == OK, "Async compilation: " + async_script.get_compile_error())
+    check(async_script.new().suspended(42) == 42, "Immediate await")
     # Resource loader/saver and source serialization.
     check(ResourceSaver.save(script, "user://roundtrip.ugd") == OK, "Resource saver")
     var loaded = ResourceLoader.load("user://roundtrip.ugd", "", ResourceLoader.CACHE_MODE_IGNORE)

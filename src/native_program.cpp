@@ -11,6 +11,8 @@
 namespace godot {
 const std::vector<std::pair<std::string, const void *>> &native_symbols() {
     static const std::vector<std::pair<std::string, const void *>> symbols = {
+        {"gj_await", reinterpret_cast<const void *>(&gj_await)},
+        {"gj_await_restore", reinterpret_cast<const void *>(&gj_await_restore)},
         {"gj_copy", reinterpret_cast<const void *>(&gj_copy)},
         {"gj_destroy", reinterpret_cast<const void *>(&gj_destroy)},
         {"gj_truth", reinterpret_cast<const void *>(&gj_truth)},
@@ -78,7 +80,7 @@ NativeState::NativeState(std::shared_ptr<NativeProgram> p, Object *object)
     : program(std::move(p)), owner(object ? object->get_instance_id() : ObjectID()) {
     members.resize(program->ir.globals.size());
 }
-bool NativeState::invoke(int index, const Variant **args, int count, Variant &result) {
+bool NativeState::invoke(int index, const Variant **args, int count, Variant &result, UnsafeFunctionState *resuming) {
     auto active = program;
     // A transient reference protects RefCounted receivers during reentrant calls.
     Variant self = owner.is_valid() ? Variant(ObjectDB::get_instance(owner)) : Variant();
@@ -88,7 +90,7 @@ bool NativeState::invoke(int index, const Variant **args, int count, Variant &re
                       0,
                       reinterpret_cast<GJVariant *>(active->statics.data()),
                       this,
-                      active->debug_info ? &UnsafeDebugger::hook : nullptr};
+                      active->debug_info ? &UnsafeDebugger::hook : nullptr, resuming};
     error.clear();
     return active->entry(&context, index, reinterpret_cast<GJVariant *>(&result),
                          reinterpret_cast<const GJVariant *const *>(args), count);

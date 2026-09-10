@@ -24,8 +24,9 @@ bool GodotJIT::compile_c(const String &source) {
     auto candidate = godot_jit::CModule::compile(std::string(utf8.get_data(), utf8.length()), error_, native_symbols());
     if (!candidate)
         return false;
-    native_.reset();
+    auto previous = std::move(native_);
     module_ = std::move(candidate);
+    if (previous) previous->cancel_coroutines();
     return true;
 }
 
@@ -38,9 +39,11 @@ int64_t GodotJIT::execute(int64_t argument) {
 }
 
 void GodotJIT::clear() {
+    auto previous = std::move(native_);
     module_.reset();
-    native_.reset();
     error_.clear();
+    // Completion callbacks may clear or replace this runtime reentrantly.
+    if (previous) previous->cancel_coroutines();
 }
 
 } // namespace godot
@@ -60,8 +63,10 @@ bool GodotJIT::compile_sgd(const String &source, Object *receiver) {
         error_ = state->error;
         return false;
     }
+    auto previous = std::move(native_);
     native_ = std::move(state);
     module_.reset();
+    if (previous) previous->cancel_coroutines();
     return true;
 }
 Variant GodotJIT::execute_function(const String &name, const Array &arguments) {

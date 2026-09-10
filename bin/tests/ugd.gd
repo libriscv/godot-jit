@@ -36,7 +36,7 @@ func run_tests() -> void:
 				instance.free()
 			quit(1)
 			return
-		var result: Variant = instance.call(method)
+		var result: Variant = await instance.call(method)
 		if typeof(result) != TYPE_BOOL or result != true:
 			failures += 1
 			push_error(args[0] + "::" + method + " returned " + str(result))

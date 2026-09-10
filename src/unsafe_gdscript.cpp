@@ -30,7 +30,7 @@ PropertyInfo type_info(int type, const String &name = String(), const String &cl
 MethodInfo method_info(const gdscript::FunctionSignature &s) {
     MethodInfo m;
     m.name = str(s.name);
-    m.return_val = type_info(s.return_type, "", str(s.return_class_name));
+    m.return_val = type_info(s.is_coroutine ? -1 : s.return_type, "", s.is_coroutine ? String() : str(s.return_class_name));
     m.flags = METHOD_FLAGS_DEFAULT | (s.is_static ? METHOD_FLAG_STATIC : 0);
     for (const auto &p : s.parameters) {
         m.arguments.push_back(type_info(p.type, str(p.name), str(p.class_name)));
@@ -452,6 +452,8 @@ Error UnsafeGDScript::_reload(bool keep) {
         for (int i = 0; i < keys.size(); ++i)
             instance->set(keys[i], snapshot.second[keys[i]]);
     }
+    if (previous_static_state) previous_static_state->cancel_coroutines();
+    for (const auto &previous : previous_states) previous.second->cancel_coroutines();
     // Script resources themselves dispatch static methods, as GDScript does.
     gdextension_interface::object_set_script_instance(_owner,
         memnew(UnsafeGDScriptInstance(this, this, false, true))->create_native());
@@ -555,6 +557,7 @@ UnsafeGDScriptInstance::UnsafeGDScriptInstance(Object *o, UnsafeGDScript *s, boo
     }
 }
 UnsafeGDScriptInstance::~UnsafeGDScriptInstance() {
+    if (state && !static_dispatch) state->cancel_coroutines(false);
     if (!static_dispatch)
         resource->instances.erase(this);
 }
