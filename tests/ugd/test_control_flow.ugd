@@ -66,3 +66,12 @@ func test_integer_precision() -> bool:
     var large: int = 9007199254740993
     var dynamic: Variant = large
     return dynamic == large and dynamic > large - 1 and dynamic < large + 1 and (large & 1) == 1
+
+func test_float_range_bounds() -> bool:
+    var total := 0.0
+    var start: Vector2 = Vector2.ZERO
+    var finish: Vector2 = Vector2(4.0, 4.0)
+    for y in range(start.y, finish.y + 1):
+        for x in range(start.x, finish.x + 1):
+            total += x + y
+    return total == 100.0

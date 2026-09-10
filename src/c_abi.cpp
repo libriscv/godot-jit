@@ -293,8 +293,20 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
         if (cached && operation == GJ_CALL && self) {
             GJVariant snapshot;
             GDExtensionCallError error{};
-            godot::gdextension_interface::variant_call(self, cached->name._native_ptr(),
-                reinterpret_cast<const GDExtensionConstVariantPtr *>(args), count, &snapshot, &error);
+            static constexpr const char *static_prefix = "__safegdscript_static__:";
+            const bool builtin_static = self->type == V::STRING &&
+                String(value(self)).begins_with(static_prefix);
+            if (builtin_static) {
+                const int type = String(value(self)).trim_prefix(static_prefix).to_int();
+                if (type < V::NIL || type >= V::VARIANT_MAX)
+                    throw std::runtime_error("Invalid built-in static Variant type");
+                godot::gdextension_interface::variant_call_static(
+                    static_cast<GDExtensionVariantType>(type), cached->name._native_ptr(),
+                    reinterpret_cast<const GDExtensionConstVariantPtr *>(args), count, &snapshot, &error);
+            } else {
+                godot::gdextension_interface::variant_call(self, cached->name._native_ptr(),
+                    reinterpret_cast<const GDExtensionConstVariantPtr *>(args), count, &snapshot, &error);
+            }
             if (error.error != GDEXTENSION_CALL_OK) {
                 gj_clear(&snapshot);
                 return gj_fail(ctx, (std::string("Method call failed: ") + name).c_str());
@@ -350,7 +362,21 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
         case GJ_STRING: result = String::utf8(name, detail); break;
         case GJ_CALL: {
             GDExtensionCallError error{};
-            object().callp(member, const_cast<const V **>(a.data()), count, result, error);
+            static constexpr const char *static_prefix = "__safegdscript_static__:";
+            const bool builtin_static = object().get_type() == V::STRING &&
+                String(object()).begins_with(static_prefix);
+            if (builtin_static) {
+                const String receiver = object();
+                const int type = receiver.trim_prefix(static_prefix).to_int();
+                if (type < V::NIL || type >= V::VARIANT_MAX)
+                    throw std::runtime_error("Invalid built-in static Variant type");
+                godot::gdextension_interface::variant_call_static(
+                    static_cast<GDExtensionVariantType>(type), member._native_ptr(),
+                    reinterpret_cast<const GDExtensionConstVariantPtr *>(a.data()), count,
+                    result._native_ptr(), &error);
+            } else {
+                object().callp(member, const_cast<const V **>(a.data()), count, result, error);
+            }
             if (error.error != GDEXTENSION_CALL_OK) throw std::runtime_error(std::string("Method call failed: ") + name);
             break;
         }

@@ -1,0 +1,5 @@
+class_name JitDemoValue
+extends RefCounted
+
+enum Mode { ZERO }
+const ANSWER := 42

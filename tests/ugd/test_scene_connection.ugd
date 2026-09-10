@@ -1,0 +1,9 @@
+extends RefCounted
+
+func test_scene_connection() -> bool:
+    var scene := load("res://tests/ugd/signal_scene.tscn")
+    var root := scene.instantiate()
+    var button: Button = root.get_node("Button")
+    var connected := button.pressed.is_connected(root.on_pressed)
+    root.free()
+    return connected

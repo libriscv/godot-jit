@@ -82,10 +82,18 @@ bool UnsafeGDScript::_set(const StringName &n, const Variant &v) {
     return true;
 }
 bool UnsafeGDScript::_get(const StringName &n, Variant &v) const {
-    if (n != StringName("script/source"))
-        return false;
-    v = source;
-    return true;
+    if (n == StringName("script/source")) {
+        v = source;
+        return true;
+    }
+    if (program) {
+        const Dictionary constants = unsafe_constants(program->ir);
+        if (constants.has(n)) {
+            v = constants[n];
+            return true;
+        }
+    }
+    return false;
 }
 void UnsafeGDScript::_get_property_list(List<PropertyInfo> *p) const {
     p->push_back(PropertyInfo(Variant::STRING, "script/source", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_STORAGE));

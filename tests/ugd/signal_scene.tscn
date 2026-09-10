@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/ugd/signal_scene.ugd" id="1_script"]
+
+[node name="Root" type="Control"]
+script = ExtResource("1_script")
+
+[node name="Button" type="Button" parent="."]
+
+[connection signal="pressed" from="Button" to="." method="on_pressed"]

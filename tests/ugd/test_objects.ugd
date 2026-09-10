@@ -56,3 +56,6 @@ func make_owned_values() -> Array:
 func test_owned_return_values() -> bool:
     var values = make_owned_values()
     return is_instance_valid(values[0]) and values[0].get_meta("value") == "alive" and values[1]["message"] == "retained" and values[2] == PackedInt32Array([1, 2])
+
+func test_builtin_static_method() -> bool:
+    return Basis.from_euler(Vector3.ZERO).is_equal_approx(Basis.IDENTITY)

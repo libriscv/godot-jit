@@ -138,6 +138,12 @@ if(GODOT_JIT_BUILD_TESTS)
                     ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
             endif()
         endforeach()
+        file(GLOB_RECURSE jit_ugd_scenes CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/*.tscn")
+        foreach(scene IN LISTS jit_ugd_scenes)
+            file(GENERATE OUTPUT "${jit_test_project}/tests/ugd/${scene}"
+                INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/${scene}" NEWLINE_STYLE UNIX)
+        endforeach()
         # Load at startup. Discovering a new extension mid-import restarts the
         # editor, whose cleanup can race deferred docs generation in Godot 4.6/4.7.
         file(GENERATE OUTPUT "${jit_test_project}/.godot/extension_list.cfg"

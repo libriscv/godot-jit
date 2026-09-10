@@ -1,0 +1,5 @@
+extends RefCounted
+
+func test_global_class_members_and_constructor() -> bool:
+    var value := JitDemoValue.new()
+    return JitDemoValue.ANSWER == 42 and JitDemoValue.Mode.ZERO == 0 and value is JitDemoValue
