@@ -7,6 +7,7 @@
 #include <godot_cpp/variant/callable_custom.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <cstring>
 
 namespace godot {
 const std::vector<std::pair<std::string, const void *>> &native_symbols() {
@@ -91,6 +92,16 @@ bool NativeState::invoke(int index, const Variant **args, int count, Variant &re
         auto object = gdextension_interface::object_get_instance_from_id(owner);
         static const auto from_object = gdextension_interface::get_variant_from_type_constructor(GDEXTENSION_VARIANT_TYPE_OBJECT);
         from_object(&self, &object);
+        if (object && owner.is_ref_counted() && self.data.i == 0) {
+            // RefCounted has already reached zero during PREDELETE. An owning
+            // Variant would reject the reference and turn self into null. Borrow
+            // the object for the notification, using Godot's non-owning ObjData
+            // representation (ObjectDB ignores the reference-counted ID bit).
+            const uint64_t id = uint64_t(owner) & ~(uint64_t(1) << 63);
+            self.type = Variant::OBJECT;
+            std::memcpy(self.data.bytes, &id, sizeof(id));
+            std::memcpy(self.data.bytes + sizeof(id), &object, sizeof(object));
+        }
     }
     GJContext context{reinterpret_cast<GJVariant *>(members.data()),
                       reinterpret_cast<GJVariant *>(&self),
@@ -175,8 +186,7 @@ bool NativeState::call(const StringName &name, const Variant **args, int count, 
                     type = Variant::OBJECT;
         }
         if (type >= 0 && type != values[i].get_type()) {
-            if ((type == Variant::FLOAT && values[i].get_type() == Variant::INT) ||
-                (type == Variant::INT && values[i].get_type() == Variant::FLOAT))
+            if (Variant::can_convert_strict(values[i].get_type(), Variant::Type(type)))
                 values[i] = UtilityFunctions::type_convert(values[i], type);
             else if (!(type == Variant::OBJECT && values[i].get_type() == Variant::NIL)) {
                 error_out.error = GDEXTENSION_CALL_ERROR_INVALID_ARGUMENT;

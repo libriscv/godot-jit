@@ -82,6 +82,10 @@ endif()
 
 if(GODOT_JIT_BUILD_TESTS)
     enable_testing()
+    find_package(Python3 QUIET COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME godot_jit_demo_compat COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/demo_compat.py")
+    endif()
     add_executable(godot_jit_basic tests/basic.cpp)
     target_link_libraries(godot_jit_basic PRIVATE godot_jit_core godot_jit::safegdscript)
     add_test(NAME godot_jit_basic COMMAND godot_jit_basic)
@@ -110,6 +114,7 @@ if(GODOT_JIT_BUILD_TESTS)
         file(GENERATE OUTPUT "${jit_test_project}/tests/async.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/async.gd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/editor.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/editor.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/compatibility.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/compatibility.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/debugger_base.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/debugger_base.ugd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/debugger_inherited.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/debugger_inherited.ugd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/debugger.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/debugger.gd")
@@ -163,7 +168,11 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_language COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/language.gd)
         set_tests_properties(godot_jit_language PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 60)
-        find_package(Python3 QUIET COMPONENTS Interpreter)
+        add_test(NAME godot_jit_compatibility COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/compatibility.gd)
+        set_tests_properties(godot_jit_compatibility PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 60
+            FAIL_REGULAR_EXPRESSION "ERROR:;leaked;resources still in use"
+            ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
         if(Python3_Interpreter_FOUND)
             add_test(NAME godot_jit_debugger COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/debugger.py"
                 "${GODOT_JIT_GODOT_EXECUTABLE}" "${jit_test_project}")

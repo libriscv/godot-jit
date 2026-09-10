@@ -4,3 +4,4 @@
 !/bin/addons/godot_jit/bin/*.gdextension
 *.uid
 /.build/
+__pycache__/

@@ -4,6 +4,8 @@
     "OS",
     "Engine",
     "Node",
+    "SceneTree",
+    "Window",
     "ResourceLoader",
     "ScriptExtension",
     "ScriptLanguageExtension",

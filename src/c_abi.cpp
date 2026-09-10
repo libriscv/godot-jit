@@ -7,6 +7,8 @@
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/window.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/array.hpp>
@@ -101,7 +103,32 @@ V utility(gdscript::GlobalFn fn, const Arguments &a) {
     if (a.size() < info.min_args || a.size() > info.max_args) throw std::runtime_error("Wrong utility argument count");
     if (info.kind == GlobalKind::NUMERIC) {
         bool ints = true;
-        for (auto *v : a) ints &= v->get_type() == V::INT;
+        bool scalars = true;
+        for (auto *v : a) {
+            ints &= v->get_type() == V::INT;
+            scalars &= v->get_type() == V::INT || v->get_type() == V::FLOAT;
+        }
+        if (!scalars) {
+            // Generic GDScript math also accepts vectors. Scalar coercion here
+            // silently loses their components (e.g. floor(Vector2) became 0.0).
+            switch (fn) {
+            case GlobalFn::ABS: return U::abs(*a[0]);
+            case GlobalFn::SIGN: return U::sign(*a[0]);
+            case GlobalFn::FLOOR: return U::floor(*a[0]);
+            case GlobalFn::CEIL: return U::ceil(*a[0]);
+            case GlobalFn::ROUND: return U::round(*a[0]);
+            case GlobalFn::SNAPPED: return U::snapped(*a[0], *a[1]);
+            case GlobalFn::CLAMP: return U::clamp(*a[0], *a[1], *a[2]);
+            case GlobalFn::WRAP: return U::wrap(*a[0], *a[1], *a[2]);
+            case GlobalFn::MIN: case GlobalFn::MAX: {
+                V result = *a[0];
+                for (size_t i = 1; i < a.size(); ++i)
+                    result = fn == GlobalFn::MIN ? U::min(result, *a[i]) : U::max(result, *a[i]);
+                return result;
+            }
+            default: throw std::runtime_error("Unsupported generic numeric utility");
+            }
+        }
         return utility(resolve_numeric_form(info, ints), a);
     }
     if (info.kind == GlobalKind::INT_OP) {
@@ -472,11 +499,23 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             break;
         }
         case GJ_LOAD: result = godot::ResourceLoader::get_singleton()->load(name ? String(name) : String(*a.at(0))); break;
-        case GJ_GET_OBJECT:
+        case GJ_GET_OBJECT: {
             if (std::string(name) == "self") result = object();
-            else if (godot::Engine::get_singleton()->has_singleton(member)) result = godot::Engine::get_singleton()->get_singleton(member);
-            else throw std::runtime_error(std::string("Unknown engine singleton: ") + name);
+            else if (godot::Engine::get_singleton()->has_singleton(member)) {
+                // Dynamic singleton lookup must not create an untracked
+                // godot-cpp instance binding that survives extension unload.
+                auto singleton = godot::gdextension_interface::global_get_singleton(member._native_ptr());
+                static const auto from_object = godot::gdextension_interface::get_variant_from_type_constructor(GDEXTENSION_VARIANT_TYPE_OBJECT);
+                from_object(result._native_ptr(), &singleton);
+            }
+            else {
+                auto *tree = godot::Object::cast_to<godot::SceneTree>(godot::Engine::get_singleton()->get_main_loop());
+                auto *autoload = tree && tree->get_root() ? tree->get_root()->get_node_or_null(godot::NodePath(name)) : nullptr;
+                if (!autoload) throw std::runtime_error(std::string("Unknown engine singleton or autoload: ") + name);
+                result = autoload;
+            }
             break;
+        }
         case GJ_NEW_OBJECT:
             result = godot::ClassDB::instantiate(member);
             if (result.get_type() == V::NIL) throw std::runtime_error(std::string("Cannot construct engine class: ") + name);
@@ -496,7 +535,13 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             break;
         default: throw std::runtime_error("Unknown C syscall operation");
         }
-        if (!valid) throw std::runtime_error("Invalid Variant operation or property/index access");
+        if (!valid) {
+            std::string message = "Invalid Variant operation or property/index access";
+            if (name && *name) message += std::string(": ") + name;
+            if (self) message += std::string(" on ") + V::get_type_name(value(self).get_type()).utf8().get_data();
+            if (operation == GJ_EVALUATE) message += " (operator " + std::to_string(detail) + ")";
+            throw std::runtime_error(message);
+        }
         gj_move(dst, reinterpret_cast<const GJVariant *>(&result));
         return 1;
     } catch (const std::exception &error) { return gj_fail(ctx, error.what()); }

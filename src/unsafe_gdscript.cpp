@@ -2,6 +2,7 @@
 #include "script_dicts.h"
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/engine_debugger.hpp>
+#include <godot_cpp/classes/class_db_singleton.hpp>
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
@@ -87,7 +88,7 @@ bool UnsafeGDScript::_get(const StringName &n, Variant &v) const {
         return true;
     }
     if (program) {
-        const Dictionary constants = unsafe_constants(program->ir);
+        const Dictionary constants = _get_constants();
         if (constants.has(n)) {
             v = constants[n];
             return true;
@@ -260,7 +261,16 @@ int32_t UnsafeGDScript::_get_member_line(const StringName &n) const {
     return i >= 0 ? program->ir.globals[i].declaration_line : -1;
 }
 Dictionary UnsafeGDScript::_get_constants() const {
-    return program ? unsafe_constants(program->ir) : Dictionary();
+    if (!program) return {};
+    Dictionary constants = unsafe_constants(program->ir);
+    // Compound constants are initialized in shared storage rather than folded
+    // into the scalar/enum metadata. Publish them on the Script resource too.
+    for (size_t i = 0; i < program->ir.globals.size(); ++i) {
+        const auto &global = program->ir.globals[i];
+        if (global.is_const && !global.is_member())
+            constants[str(global.name)] = program->statics[i];
+    }
+    return constants;
 }
 Dictionary unsafe_constants(const gdscript::IRProgram &ir) {
     Dictionary d;
@@ -318,6 +328,19 @@ Error unsafe_compiler_options(const String &source, const String &source_path, g
     options.optimize = false;
     options.batch_iteration = false;
     options.source_path = source_path.utf8().get_data();
+    // The frontend needs the native parent chain to resolve inherited enums,
+    // such as LineEdit's Object.ConnectFlags, and native type relationships.
+    auto *class_db = ClassDBSingleton::get_singleton();
+    for (const String &name : class_db->get_class_list()) {
+        String ancestors;
+        String parent = class_db->get_parent_class(name);
+        while (!parent.is_empty()) {
+            if (!ancestors.is_empty()) ancestors += ",";
+            ancestors += parent;
+            parent = class_db->get_parent_class(parent);
+        }
+        options.engine_ancestry.emplace_back(name.utf8().get_data(), ancestors.utf8().get_data());
+    }
     auto settings = ProjectSettings::get_singleton();
     auto settings_properties = settings->get_property_list();
     for (int i = 0; i < settings_properties.size(); ++i) {
@@ -775,7 +798,9 @@ void UnsafeGDScriptInstance::free_method_list(const GDExtensionMethodInfo *list,
         memdelete_arr(list);
 }
 bool UnsafeGDScriptInstance::has_method(const StringName &n) const {
-    return !placeholder && (static_dispatch ? resource->_has_static_method(n) : resource->_has_method(n));
+    // Placeholders still publish method metadata for editor signal connections.
+    // callp remains responsible for preventing non-tool execution.
+    return static_dispatch ? resource->_has_static_method(n) : resource->_has_method(n);
 }
 GDExtensionInt UnsafeGDScriptInstance::get_method_argument_count(const StringName &n, bool &valid) const {
     valid = has_method(n);
@@ -812,7 +837,7 @@ void UnsafeGDScriptInstance::callp(const StringName &n, const Variant **a, int c
     }
 }
 void UnsafeGDScriptInstance::notification(int what, bool) {
-    if (has_method("_notification")) {
+    if (!placeholder && has_method("_notification")) {
         Variant v = what, r;
         const Variant *a[] = {&v};
         GDExtensionCallError e{};

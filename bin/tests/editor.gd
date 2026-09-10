@@ -24,6 +24,17 @@ func run_checks():
     check(node.get("amount") == 23 and node.get("added") == "new", "Placeholder edits survive reload; new exports get defaults")
     check(node.get_property_list().any(func(p): return p.name == "added" and p.usage & PROPERTY_USAGE_EDITOR), "Placeholder inspector metadata")
     node.free()
+    var signal_script = UnsafeGDScript.new()
+    signal_script.source_code = "extends Button\nfunc handler(value: int) -> void:\n    Engine.set_meta(\"unsafe_placeholder_ran\", value)\n"
+    check(signal_script.reload() == OK, "Placeholder signal source compilation")
+    var button = Button.new()
+    button.set_script(signal_script)
+    var callback = Callable(button, "handler").bind(1)
+    check(callback.is_valid(), "Placeholder methods remain valid callables")
+    check(button.pressed.connect(callback) == OK, "Bound placeholder signal connection")
+    button.pressed.emit()
+    check(not Engine.has_meta("unsafe_placeholder_ran"), "Placeholder callbacks never execute in editor")
+    button.free()
     # Non-tool placeholders must reconstruct constant defaults without running
     # member initializers or _init. Compare the Inspector values to GDScript.
     var defaults_source = """extends Node
