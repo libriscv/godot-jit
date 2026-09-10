@@ -15,6 +15,7 @@ class PackageTest(unittest.TestCase):
         self.output = self.root / "godot-jit.zip"
         self.binaries = []
         for target in (
+            "android.arm64.so", "android.x86_64.so",
             "linux.x86_64.so", "linux.arm64.so", "macos.x86_64.dylib",
             "macos.arm64.dylib", "windows.x86_64.dll",
         ):
@@ -38,7 +39,7 @@ class PackageTest(unittest.TestCase):
             })
             descriptor = configparser.ConfigParser(interpolation=None)
             descriptor.read_string(archive.read("addons/godot_jit/bin/godot_jit.gdextension").decode())
-            self.assertEqual(len(descriptor["libraries"]), 10)
+            self.assertEqual(len(descriptor["libraries"]), 14)
             self.assertEqual(descriptor["configuration"]["entry_symbol"], '"godot_jit_library_init"')
             for key, value in descriptor["libraries"].items():
                 self.assertIn(".template_release.", value)

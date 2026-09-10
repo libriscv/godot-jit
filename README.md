@@ -55,6 +55,19 @@ Editor completion, documentation, and profiler integration = not yet.
 Extract `godot-jit.zip` into your Godot 4.6+ project directory, so the extension
 is at `addons/godot_jit/`, then restart the editor.
 
+Release archives include Android ARM64/x86-64 (API 24+), Linux ARM64/x86-64,
+macOS Apple Silicon/Intel, and Windows x86-64 binaries.
+
+## Building for Android
+
+With Android NDK r24 installed:
+
+```sh
+export ANDROID_NDK_ROOT=/path/to/android-ndk-r24
+bash scripts/ci/build_android.sh arm64
+bash scripts/ci/build_android.sh x86_64
+```
+
 ## Game studios
 
 Game studios will want the Godot Sandbox Plus module. See: https://plus.libriscv.no/

@@ -11,6 +11,7 @@ import zipfile
 REPOSITORY = Path(__file__).resolve().parents[2]
 ADDON = Path("addons/godot_jit")
 TARGETS = {
+    "android": ("so", ("arm64", "x86_64")),
     "linux": ("so", ("x86_64", "arm64")),
     "macos": ("dylib", ("x86_64", "arm64")),
     "windows": ("dll", ("x86_64",)),
@@ -32,13 +33,13 @@ def package(root: Path, output: Path) -> None:
             binary = root / path
             if not binary.is_file() or binary.stat().st_size == 0:
                 raise ValueError(f"Missing or empty library: {binary}")
-            # Use the tested release binary in the editor and exported games.
+            # Use the release binary in the editor and exported games.
             for variant in ("debug", "release"):
                 libraries[f"{platform}.{variant}.{arch}"] = expected
             files.append(path)
 
     # The source descriptor also supports locally built RISC-V. Release ZIPs
-    # declare only the architectures actually built and tested by CI.
+    # declare only the architectures actually built by CI.
     descriptor["libraries"] = libraries
     manifest = io.StringIO()
     descriptor.write(manifest)

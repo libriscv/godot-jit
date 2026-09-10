@@ -48,4 +48,4 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Godot JIT build ${GITHUB_RUN_NUMBER}" \
             --draft --prerelease --generate-notes \
-            --notes 'Extract godot-jit.zip into a Godot 4.6+ project. The archive contains addons/godot_jit with release binaries for use in the editor and exported games on Linux x86-64/ARM64, macOS Intel/Apple Silicon, and Windows x86-64.'
+            --notes 'Extract godot-jit.zip into a Godot 4.6+ project. The archive contains addons/godot_jit with release binaries for use in the editor and exported games on Android ARM64/x86-64, Linux x86-64/ARM64, macOS Intel/Apple Silicon, and Windows x86-64. Android binaries are cross-compiled for API 24+; CI runtime tests cover desktop platforms.'

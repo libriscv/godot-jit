@@ -1,0 +1,47 @@
+name: Android JIT
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - name: Set up Android NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r24
+          add-to-path: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build ccache
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: android-jit-r24-${{ matrix.arch }}
+          max-size: 300M
+      - name: Build release
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.ndk.outputs.ndk-path }}
+          JIT_ARCH: ${{ matrix.arch }}
+        run: bash scripts/ci/build_android.sh "$JIT_ARCH"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: godot-jit-android-${{ matrix.arch }}
+          path: .build/artifact/
+          if-no-files-found: error
+          retention-days: 7

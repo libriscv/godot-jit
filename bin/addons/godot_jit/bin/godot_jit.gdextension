@@ -4,6 +4,10 @@ compatibility_minimum = "4.6"
 reloadable = false
 
 [libraries]
+android.debug.arm64 = "./libgodot-jit.android.template_debug.arm64.so"
+android.release.arm64 = "./libgodot-jit.android.template_release.arm64.so"
+android.debug.x86_64 = "./libgodot-jit.android.template_debug.x86_64.so"
+android.release.x86_64 = "./libgodot-jit.android.template_release.x86_64.so"
 linux.debug.x86_64 = "./libgodot-jit.linux.template_debug.x86_64.so"
 linux.release.x86_64 = "./libgodot-jit.linux.template_release.x86_64.so"
 linux.debug.arm64 = "./libgodot-jit.linux.template_debug.arm64.so"

@@ -14,6 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  jit_android:
+    uses: ./.github/workflows/jit_android.yml
   jit_linux:
     uses: ./.github/workflows/jit_linux.yml
   jit_macos:
@@ -21,7 +23,7 @@ jobs:
   jit_windows:
     uses: ./.github/workflows/jit_windows.yml
   package:
-    needs: [jit_linux, jit_macos, jit_windows]
+    needs: [jit_android, jit_linux, jit_macos, jit_windows]
     uses: ./.github/workflows/release.yml
     permissions:
       contents: write
