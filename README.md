@@ -47,6 +47,10 @@ documentation, and profiler integration are not yet implemented. Maybe more.
 Extract `godot-jit.zip` into your Godot 4.6+ project directory, so the extension
 is at `addons/godot_jit/`, then restart the editor.
 
+## Game studios
+
+Game studios will want the Godot Sandbox Plus module. See: https://plus.libriscv.no/
+
 ## License
 
 Copyright (C) 2026 Alf-André Walla.
