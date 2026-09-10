@@ -3,15 +3,9 @@
 A JIT-like backend for the GS SafeGDScript compiler, executed by libtcc
 inside a GDExtension.
 
-```gdscript
-var jit = GodotJIT.new()
-assert(jit.compile_sgd("func answer(n: int) -> int:\n    return n * 2 + 2\n"))
-assert(jit.execute_function("answer", [20]) == 42)
-```
-
 This is a glue project that re-uses work that already exists by me. The compiler
 is from Godot Sandbox, the JIT is my libtcc fork from libriscv and the backend is
-more or less the AOT backend from Godot Sandbox Plus. Still work in progress.
+more or less the AOT backend from Godot Sandbox Plus. Highly experimental.
 
 ## UnsafeGDScript
 
@@ -50,6 +44,16 @@ func delayed_answer() -> int:
 
 Editor completion, documentation, and profiler integration = not yet.
 
+Since nobody's paying for this, don't have any expectations. Thank.
+
+## Godot JIT directly
+
+```gdscript
+var jit = GodotJIT.new()
+assert(jit.compile_sgd("func answer(n: int) -> int:\n    return n * 2 + 2\n"))
+assert(jit.execute_function("answer", [20]) == 42)
+```
+
 ## Installing the addon
 
 Extract `godot-jit.zip` into your Godot 4.6+ project directory, so the extension
@@ -67,6 +71,8 @@ export ANDROID_NDK_ROOT=/path/to/android-ndk-r24
 bash scripts/ci/build_android.sh arm64
 bash scripts/ci/build_android.sh x86_64
 ```
+
+I don't know, if they're locking down Android it's dead to me.
 
 ## Game studios
 
