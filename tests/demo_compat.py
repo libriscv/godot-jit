@@ -32,7 +32,12 @@ class CompatibilityHarnessTests(unittest.TestCase):
                 self.assertEqual(script.with_suffix(".ugd").read_bytes(), source)
                 return harness.RunResult("fixture", phase, [], 0, False, 0, [], phase + ".log")
 
-            with patch.object(harness, "run_godot", side_effect=run):
+            # amd64 only
+            with (
+                patch.object(harness, "run_godot", side_effect=run),
+                patch.object(harness.platform, "system", return_value="Linux"),
+                patch.object(harness.platform, "machine", return_value="x86_64"),
+            ):
                 harness.to_safe_mode(project, project, Path("godot"), library, 1, project)
             self.assertIn(b"node.ugd", resource.read_bytes())
             harness.to_gd_mode(project, project, Path("godot"), 1, project, reimport=False)
