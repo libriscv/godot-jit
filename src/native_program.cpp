@@ -56,6 +56,7 @@ std::shared_ptr<NativeProgram> NativeProgram::compile(const String &source, cons
         if (!p->module)
             return {};
         p->entry = reinterpret_cast<GJEntry>(p->module->symbol("gj_entry"));
+        p->function_entries = reinterpret_cast<const FunctionEntry *>(p->module->symbol("gj_functions"));
         for (size_t i = 0; i < p->ir.functions.size(); ++i) {
             p->functions.emplace(p->ir.functions[i].name, i);
             p->methods.insert(StringName(p->ir.functions[i].name.c_str()), i);
@@ -83,7 +84,14 @@ NativeState::NativeState(std::shared_ptr<NativeProgram> p, Object *object)
 bool NativeState::invoke(int index, const Variant **args, int count, Variant &result, UnsafeFunctionState *resuming) {
     auto active = program;
     // A transient reference protects RefCounted receivers during reentrant calls.
-    Variant self = owner.is_valid() ? Variant(ObjectDB::get_instance(owner)) : Variant();
+    // Construct from the engine object directly. Resolving a godot-cpp wrapper
+    // first adds an instance-binding lookup to every script entry.
+    GJVariant self{};
+    if (owner.is_valid()) {
+        auto object = gdextension_interface::object_get_instance_from_id(owner);
+        static const auto from_object = gdextension_interface::get_variant_from_type_constructor(GDEXTENSION_VARIANT_TYPE_OBJECT);
+        from_object(&self, &object);
+    }
     GJContext context{reinterpret_cast<GJVariant *>(members.data()),
                       reinterpret_cast<GJVariant *>(&self),
                       &error,
@@ -92,8 +100,12 @@ bool NativeState::invoke(int index, const Variant **args, int count, Variant &re
                       this,
                       active->debug_info ? &UnsafeDebugger::hook : nullptr, resuming};
     error.clear();
-    return active->entry(&context, index, reinterpret_cast<GJVariant *>(&result),
-                         reinterpret_cast<const GJVariant *const *>(args), count);
+    const auto native_args = reinterpret_cast<const GJVariant *const *>(args);
+    const bool ok = index >= 0 && size_t(index) < active->ir.functions.size() && active->function_entries
+        ? active->function_entries[index](&context, reinterpret_cast<GJVariant *>(&result), native_args, count)
+        : active->entry(&context, index, reinterpret_cast<GJVariant *>(&result), native_args, count);
+    gj_clear(&self);
+    return ok;
 }
 Variant parameter_default(const gdscript::FunctionParameter &p) {
     using K = gdscript::FunctionParameter::DefaultKind;
@@ -115,10 +127,10 @@ Variant parameter_default(const gdscript::FunctionParameter &p) {
     }
 }
 bool NativeState::call(const StringName &name, const Variant **args, int count, Variant &result,
-                       GDExtensionCallError &error_out) {
+                       GDExtensionCallError &error_out, bool static_only) {
     error_out = {};
     error.clear();
-    result = {};
+    gj_clear(reinterpret_cast<GJVariant *>(&result));
     const int *method = program->methods.getptr(name);
     if (!method) {
         error_out.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
@@ -126,6 +138,10 @@ bool NativeState::call(const StringName &name, const Variant **args, int count, 
     }
     const int index = *method;
     const auto &signature = program->ir.signatures.at(index);
+    if (static_only && !signature.is_static) {
+        error_out.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
+        return false;
+    }
     const int implicit = program->ir.functions[index].parameters.size() - signature.parameters.size();
     const int total = signature.parameters.size() + implicit;
     if (count < int(signature.required_arguments) + implicit || count > total) {
@@ -141,7 +157,7 @@ bool NativeState::call(const StringName &name, const Variant **args, int count, 
     for (int i = implicit; exact && i < total; ++i) {
         const auto &parameter = signature.parameters[i - implicit];
         exact = parameter.class_name.empty() &&
-                (parameter.type < 0 || parameter.type == args[i]->get_type());
+                (parameter.type < 0 || parameter.type == int(reinterpret_cast<const GJVariant *>(args[i])->type));
     }
     if (exact) {
         if (invoke(index, args, count, result)) return true;

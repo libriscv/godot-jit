@@ -14,6 +14,12 @@
 
 namespace godot {
 struct NativeProgram {
+    struct Name {
+        StringName name;
+        Variant key;
+        Variant string_key;
+        explicit Name(const StringName &n) : name(n), key(n), string_key(String(n)) {}
+    };
     std::unique_ptr<godot_jit::CModule> module;
     gdscript::IRProgram ir;
     std::string generated;
@@ -21,10 +27,12 @@ struct NativeProgram {
     bool debug_info = false;
     std::unordered_map<std::string, int> functions;
     HashMap<StringName, int> methods;
-    std::unordered_map<std::string_view, StringName> names;
+    std::unordered_map<std::string_view, Name> names;
     std::vector<Variant> statics;
     Dictionary property_defaults;
     GJEntry entry = nullptr;
+    using FunctionEntry = int (*)(GJContext *, GJVariant *, const GJVariant *const *, int);
+    const FunctionEntry *function_entries = nullptr;
     static std::shared_ptr<NativeProgram> compile(const String &, const gdscript::CompilerOptions &, std::string &);
 };
 struct NativeState : std::enable_shared_from_this<NativeState> {
@@ -43,7 +51,7 @@ struct NativeState : std::enable_shared_from_this<NativeState> {
     void resume(const Ref<UnsafeFunctionState> &, const Variant &);
     explicit NativeState(std::shared_ptr<NativeProgram> p, Object *object = nullptr);
     bool invoke(int index, const Variant **args, int count, Variant &result, UnsafeFunctionState *resuming = nullptr);
-    bool call(const StringName &, const Variant **, int, Variant &, GDExtensionCallError &);
+    bool call(const StringName &, const Variant **, int, Variant &, GDExtensionCallError &, bool static_only = false);
 };
 Variant parameter_default(const gdscript::FunctionParameter &);
 Dictionary native_property_defaults(const String &, const gdscript::CompilerOptions &, const gdscript::IRProgram &);

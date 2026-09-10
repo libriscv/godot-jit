@@ -169,12 +169,21 @@ V utility(gdscript::GlobalFn fn, const Arguments &a) {
 
 extern "C" void gj_copy(GJVariant *dst, const GJVariant *src) {
     if (dst == src) return;
+    if (gj_trivial(dst->type)) {
+        // No owned payload to destroy. Avoid Variant::operator='s extension
+        // calls to discover the tag and clear an already-trivial destination.
+        godot::gdextension_interface::variant_new_copy(dst, src);
+        return;
+    }
     // Native copy constructors maintain String/container/RefCounted ownership.
     value(dst) = value(src);
 }
 extern "C" void gj_destroy(GJVariant *v) {
-    value(v).~Variant();
-    new (v) godot::Variant();
+    godot::gdextension_interface::variant_destroy(v);
+    // Reinitialize the native ABI's nil representation without a second
+    // extension call. Do not end the surrounding godot-cpp wrapper's lifetime.
+    v->type = V::NIL;
+    v->data.i = 0;
 }
 extern "C" int gj_truth(const GJVariant *v) { return value(v).booleanize(); }
 extern "C" int gj_fail(GJContext *ctx, const char *message) {
@@ -267,24 +276,66 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             *dst = result;
             return 1;
         }
-        const Arguments a{reinterpret_cast<const V *const *>(args), size_t(count)};
-        V result;
-        bool valid = true;
         const bool named = operation == GJ_CALL || operation == GJ_SUPER_CALL ||
             operation == GJ_GET_NAMED || operation == GJ_SET_NAMED ||
             operation == GJ_DICTIONARY_HAS || operation == GJ_GET_OBJECT ||
             operation == GJ_NEW_OBJECT || operation == GJ_CALLABLE;
-        StringName uncached;
-        const StringName *resolved = &uncached;
+        const godot::NativeProgram::Name *cached = nullptr;
         if (named && name) {
             if (ctx->runtime) {
                 const auto &names = static_cast<godot::NativeState *>(ctx->runtime)->program->names;
                 auto found = names.find(name);
-                if (found != names.end()) resolved = &found->second;
+                if (found != names.end()) {
+                    cached = &found->second;
+                }
             }
-            if (resolved == &uncached) uncached = StringName(name);
         }
-        const StringName &member = *resolved;
+        if (cached && operation == GJ_CALL && self) {
+            GJVariant snapshot;
+            GDExtensionCallError error{};
+            godot::gdextension_interface::variant_call(self, cached->name._native_ptr(),
+                reinterpret_cast<const GDExtensionConstVariantPtr *>(args), count, &snapshot, &error);
+            if (error.error != GDEXTENSION_CALL_OK) {
+                gj_clear(&snapshot);
+                return gj_fail(ctx, (std::string("Method call failed: ") + name).c_str());
+            }
+            gj_clear(dst);
+            *dst = snapshot;
+            return 1;
+        }
+        if (cached && self && self->type == V::DICTIONARY) {
+            if (operation == GJ_GET_NAMED) {
+                // The public Dictionary index pointer API cannot report missing
+                // keys. The checked Variant getter preserves that error and
+                // constructs an owned snapshot, including when dst aliases self.
+                GJVariant snapshot;
+                GDExtensionBool ok;
+                godot::gdextension_interface::variant_get_keyed(self, cached->key._native_ptr(), &snapshot, &ok);
+                if (!ok) {
+                    gj_clear(&snapshot);
+                    return gj_fail(ctx, "Invalid Variant operation or property/index access");
+                }
+                gj_clear(dst);
+                *dst = snapshot;
+                return 1;
+            }
+            if (operation == GJ_SET_NAMED && count == 1) {
+                GDExtensionBool ok;
+                // Use the checked setter so typed/read-only Dictionaries retain
+                // validation. Pooled keys avoid temporary StringName ownership.
+                godot::gdextension_interface::variant_set_keyed(self,
+                    (detail == 4 ? cached->string_key : cached->key)._native_ptr(), args[0], &ok);
+                if (!ok) return gj_fail(ctx, "Invalid Variant operation or property/index access");
+                gj_clear(dst);
+                return 1;
+            }
+        }
+        const Arguments a{reinterpret_cast<const V *const *>(args), size_t(count)};
+        V result;
+        bool valid = true;
+        StringName uncached;
+        if (!cached && named && name) uncached = StringName(name);
+        const StringName &member = cached ? cached->name : uncached;
         auto object = [&]() -> V & {
             if (!self) throw std::runtime_error("This operation requires a receiver");
             return value(self);

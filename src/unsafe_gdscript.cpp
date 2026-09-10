@@ -546,7 +546,7 @@ std::vector<Ref<UnsafeGDScript>> UnsafeGDScript::live_scripts() {
 }
 
 UnsafeGDScriptInstance::UnsafeGDScriptInstance(Object *o, UnsafeGDScript *s, bool p, bool sd)
-    : owner(o), resource(s), placeholder(p), static_dispatch(sd) {
+    : owner(o), resource(s), placeholder(p), static_dispatch(sd), nested_dispatch(!s->nested_name.is_empty()) {
     fields = s->pending_fields;
     if (sd)
         state = s->static_state;
@@ -776,13 +776,15 @@ GDExtensionInt UnsafeGDScriptInstance::get_method_argument_count(const StringNam
 void UnsafeGDScriptInstance::callp(const StringName &n, const Variant **a, int count, Variant &r,
                                    GDExtensionCallError &e) {
     e = {};
-    if (!has_method(n)) {
+    // Ordinary entry resolves and validates the method in NativeState::call.
+    // Nested classes still need their inherited public-to-internal name mapping.
+    if (placeholder || (nested_dispatch && !has_method(n))) {
         e.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
         return;
     }
     auto active = state;
-    if (resource->nested_name.is_empty())
-        active->call(n, a, count, r, e);
+    if (!nested_dispatch)
+        active->call(n, a, count, r, e, static_dispatch);
     else {
         int index = resource->method_index(n);
         Variant self = owner;

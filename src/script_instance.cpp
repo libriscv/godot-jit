@@ -148,19 +148,14 @@ static void gdextension_script_instance_to_string(GDExtensionScriptInstanceDataP
 	*r_is_valid = is_valid;
 }
 
-static void gdextension_script_instance_refcount_incremented(GDExtensionScriptInstanceDataPtr p_instance) {
+static GDExtensionObjectPtr gdextension_script_instance_get_script(GDExtensionScriptInstanceDataPtr p_instance) {
 	ScriptInstanceExtension *instance = reinterpret_cast<ScriptInstanceExtension *>(p_instance);
-	instance->refcount_incremented();
+	return instance->get_script()->_owner;
 }
 
 static GDExtensionBool gdextension_script_instance_refcount_decremented(GDExtensionScriptInstanceDataPtr p_instance) {
 	ScriptInstanceExtension *instance = reinterpret_cast<ScriptInstanceExtension *>(p_instance);
 	return instance->refcount_decremented();
-}
-
-static GDExtensionObjectPtr gdextension_script_instance_get_script(GDExtensionScriptInstanceDataPtr p_instance) {
-	ScriptInstanceExtension *instance = reinterpret_cast<ScriptInstanceExtension *>(p_instance);
-	return instance->get_script()->_owner;
 }
 
 static GDExtensionBool gdextension_script_instance_is_placeholder(GDExtensionScriptInstanceDataPtr p_instance) {
@@ -219,7 +214,9 @@ GDExtensionScriptInstanceInfo3 ScriptInstanceExtension::script_instance_info = {
 	&gdextension_script_instance_call,
 	&gdextension_script_instance_notification,
 	&gdextension_script_instance_to_string,
-	&gdextension_script_instance_refcount_incremented,
+	// UnsafeGDScript's increment notification is empty. The decrement callback
+	// is required: the engine default would prevent RefCounted deletion.
+	nullptr,
 	&gdextension_script_instance_refcount_decremented,
 	&gdextension_script_instance_get_script,
 	&gdextension_script_instance_is_placeholder,

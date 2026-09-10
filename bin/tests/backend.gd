@@ -26,6 +26,10 @@ func check_walk_ownership(jit: GodotJIT, watched: RefCounted) -> void:
 	# before the caller checks reference counts.
 	run(jit, "walk_last", [[watched]], watched)
 
+func check_cached_ownership(jit: GodotJIT, watched: RefCounted) -> void:
+	run(jit, "cached_read", [{"value": watched}], watched)
+	run(jit, "take_last", [[watched]], watched)
+
 func _initialize() -> void:
 	var jit := GodotJIT.new()
 	var receiver := Node.new()
@@ -85,6 +89,21 @@ func dict_literal():
     for key in d:
         sum += int(d[key])
     return sum
+func cached_read(d):
+    d = d.value
+    return d
+func cached_write(d, v):
+    d.value = v
+    return d
+func cached_string_write(d, v):
+    d["value"] = v
+    return d
+func take_last(a):
+    a = a.pop_back()
+    return a
+func constant_vectors(input):
+    var boundary: int = int(input)
+    return [Vector2(boundary, 60), Vector3(1.25, 2.5, boundary), Vector4(1, 2, 3, boundary)]
 func vector():
     var v = Vector3(1.0, 2.0, 3.0)
     v.x = 4.0
@@ -230,6 +249,23 @@ func nested_error():
 	run(jit, "dictionaries", [d], [42, true, 7, 1])
 	check(d == {"answer": 42}, "Dictionary mutation must affect the original native Dictionary")
 	run(jit, "dict_literal", [], 5)
+	var boundary: int = 18014399583223809
+	run(jit, "constant_vectors", [boundary], [Vector2(boundary, 60), Vector3(1.25, 2.5, boundary), Vector4(1, 2, 3, boundary)])
+	var held := RefCounted.new()
+	var held_refs := held.get_reference_count()
+	check_cached_ownership(jit, held)
+	check(held.get_reference_count() == held_refs, "Owned dictionary/call results must release their snapshots")
+	run(jit, "cached_read", [{"value": null}], null)
+	var typed: Dictionary[String, int] = {"value": 7}
+	run(jit, "cached_read", [typed], 7)
+	run(jit, "cached_write", [typed, 8], {"value": 8})
+	check(typed.value == 8, "Cached named setter must mutate typed Dictionaries")
+	var string_keys := {}
+	run(jit, "cached_string_write", [string_keys, 9], {"value": 9})
+	check(typeof(string_keys.keys()[0]) == TYPE_STRING, "Cached literal setter must preserve String keys")
+	jit.execute_function("cached_read", [{}])
+	check(not jit.get_error().is_empty(), "Missing cached dictionary keys must remain errors")
+	run(jit, "cached_read", [{"value": 42}], 42)
 	run(jit, "vector", [], Vector3(5, 3, 4))
 	run(jit, "packed", [], PackedInt32Array([1, 7, 3]))
 	for container in [[], [1, 2], {"a": 1}, PackedInt32Array([1, 2, 3])]:
