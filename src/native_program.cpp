@@ -12,6 +12,15 @@
 namespace godot {
 const std::vector<std::pair<std::string, const void *>> &native_symbols() {
     static const std::vector<std::pair<std::string, const void *>> symbols = {
+#define GJ_BIND_MATH(id, name, result, count) {"gj_math_" #name, reinterpret_cast<const void *>(&UtilityFunctions::name)},
+        GJ_ENGINE_MATH(GJ_BIND_MATH)
+#undef GJ_BIND_MATH
+#define GJ_BIND_NORMALIZE(n, type, hash) {"gj_vector" #n "_normalized", reinterpret_cast<const void *>( \
+            gdextension_interface::variant_get_ptr_builtin_method(static_cast<GDExtensionVariantType>(type), \
+                StringName("normalized")._native_ptr(), hash))},
+        GJ_VECTOR_NORMALIZE(GJ_BIND_NORMALIZE)
+#undef GJ_BIND_NORMALIZE
+        {"gj_sqrt_real", reinterpret_cast<const void *>(&gj_sqrt_real)},
         {"gj_await", reinterpret_cast<const void *>(&gj_await)},
         {"gj_await_restore", reinterpret_cast<const void *>(&gj_await_restore)},
         {"gj_copy", reinterpret_cast<const void *>(&gj_copy)},

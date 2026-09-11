@@ -102,6 +102,17 @@ if(GODOT_JIT_BUILD_TESTS)
         set_tests_properties(godot_jit_system_c PROPERTIES FIXTURES_REQUIRED emitted_c FIXTURES_SETUP system_c)
         add_test(NAME godot_jit_system_c_run COMMAND "${CMAKE_CURRENT_BINARY_DIR}/test_backend${CMAKE_EXECUTABLE_SUFFIX}")
         set_tests_properties(godot_jit_system_c_run PROPERTIES FIXTURES_REQUIRED system_c)
+        if(UNIX)
+            set(jit_test_math_library -lm)
+        endif()
+        add_test(NAME godot_jit_system_math COMMAND "${CMAKE_C_COMPILER}" -std=c99 -Wall -Wextra
+            -Werror -Wno-unused-parameter -Wno-unused-label -O2 -DGJ_TEST_MATH
+            -I "${CMAKE_CURRENT_SOURCE_DIR}/godot-sandbox/src/gdscript/compiler"
+            "${CMAKE_CURRENT_BINARY_DIR}/test_backend.c.math.c" "${CMAKE_CURRENT_SOURCE_DIR}/tests/system_c_host.c"
+            -o "${CMAKE_CURRENT_BINARY_DIR}/test_math${CMAKE_EXECUTABLE_SUFFIX}" ${jit_test_math_library})
+        set_tests_properties(godot_jit_system_math PROPERTIES FIXTURES_REQUIRED emitted_c FIXTURES_SETUP system_math)
+        add_test(NAME godot_jit_system_math_run COMMAND "${CMAKE_CURRENT_BINARY_DIR}/test_math${CMAKE_EXECUTABLE_SUFFIX}")
+        set_tests_properties(godot_jit_system_math_run PROPERTIES FIXTURES_REQUIRED system_math)
     endif()
     find_program(GODOT_JIT_GODOT_EXECUTABLE NAMES godot godot4)
     if(GODOT_JIT_GODOT_EXECUTABLE)
@@ -112,6 +123,7 @@ if(GODOT_JIT_BUILD_TESTS)
         file(GENERATE OUTPUT "${jit_test_project}/godot_jit.gdextension" CONTENT
             "[configuration]\nentry_symbol = \"godot_jit_library_init\"\ncompatibility_minimum = \"4.6\"\n\n[libraries]\n${jit_platform}.${jit_arch} = \"$<TARGET_FILE:godot-jit>\"\n")
         file(GENERATE OUTPUT "${jit_test_project}/tests/async.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/async.gd" NEWLINE_STYLE UNIX)
+        file(GENERATE OUTPUT "${jit_test_project}/tests/math.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/math.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/editor.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/editor.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/compatibility.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/compatibility.gd")
@@ -162,6 +174,9 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_async COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/async.gd)
         set_tests_properties(godot_jit_async PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        add_test(NAME godot_jit_math COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/math.gd)
+        set_tests_properties(godot_jit_math PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
         add_test(NAME godot_jit_backend COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/backend.gd)
         set_tests_properties(godot_jit_backend PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
@@ -192,7 +207,7 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_typical COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/typical_benchmark.gd -- --check-only)
         set_tests_properties(godot_jit_typical PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
-        set_tests_properties(godot_jit_async godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_highlighter godot_jit_editor godot_jit_debugger_remote godot_jit_typical PROPERTIES ENVIRONMENT
+        set_tests_properties(godot_jit_math godot_jit_async godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_highlighter godot_jit_editor godot_jit_debugger_remote godot_jit_typical PROPERTIES ENVIRONMENT
             "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
     endif()
 endif()

@@ -5,7 +5,7 @@ usage() {
     cat <<'EOF'
 Usage: tests/run_benchmarks.sh [debug|release] [iterations]
 
-Configure, build, and compare GDScript with godot-jit in both benchmark suites.
+Configure, build, and compare GDScript with godot-jit in the call, typical, and math benchmark suites.
 Defaults: release build, 100000 iterations per workload.
 Set GODOT to a Godot 4.6+ executable; otherwise use PATH or the preset's cached path.
 Set CMAKE_BUILD_PARALLEL_LEVEL to limit build jobs.
@@ -77,9 +77,13 @@ if [[ $preset == debug ]]; then config=Debug; fi
 project="$build_dir/test-project/$config"
 run_logged import "$godot" --headless --path "$project" --import
 
-for suite in call typical; do
+for suite in call typical math; do
     echo "Running $suite benchmarks ($iterations iterations)..."
-    run_logged "$suite" "$godot" --headless --path "$project" --script "res://tests/${suite}_benchmark.gd" -- "$iterations"
+    if [[ $suite == math ]]; then
+        run_logged "$suite" "$godot" --headless --path "$project" --script res://tests/math.gd -- --benchmark "$iterations"
+    else
+        run_logged "$suite" "$godot" --headless --path "$project" --script "res://tests/${suite}_benchmark.gd" -- "$iterations"
+    fi
     # Godot can log script errors yet exit successfully. Never report those runs.
     if grep -Eq 'SCRIPT ERROR:|^ERROR:' "$log_dir/$suite.log"; then
         cat "$log_dir/$suite.log" >&2
@@ -129,3 +133,7 @@ END {
     }
 }
 ' "$log_dir/call.log" "$log_dir/typical.log"
+
+echo
+echo 'Math loops (median of 7 after warm-up; alternating order; Godot engine math)'
+awk '/^bench_/ { print }' "$log_dir/math.log"

@@ -19,6 +19,8 @@
 #include <stdexcept>
 #include <string>
 
+extern "C" GJReal gj_sqrt_real(GJReal value) { return godot::Math::sqrt(value); }
+
 namespace {
 using V = godot::Variant;
 using godot::String;
@@ -102,6 +104,13 @@ V utility(gdscript::GlobalFn fn, const Arguments &a) {
     const auto &info = global_function(fn);
     if (a.size() < info.min_args || a.size() > info.max_args) throw std::runtime_error("Wrong utility argument count");
     if (info.kind == GlobalKind::NUMERIC) {
+        if (fn == GlobalFn::CLAMP) return U::clamp(*a[0], *a[1], *a[2]);
+        if (fn == GlobalFn::MIN || fn == GlobalFn::MAX) {
+            V result = *a[0];
+            for (size_t i = 1; i < a.size(); ++i)
+                result = fn == GlobalFn::MIN ? U::min(result, *a[i]) : U::max(result, *a[i]);
+            return result;
+        }
         bool ints = true;
         bool scalars = true;
         for (auto *v : a) {
@@ -118,14 +127,7 @@ V utility(gdscript::GlobalFn fn, const Arguments &a) {
             case GlobalFn::CEIL: return U::ceil(*a[0]);
             case GlobalFn::ROUND: return U::round(*a[0]);
             case GlobalFn::SNAPPED: return U::snapped(*a[0], *a[1]);
-            case GlobalFn::CLAMP: return U::clamp(*a[0], *a[1], *a[2]);
             case GlobalFn::WRAP: return U::wrap(*a[0], *a[1], *a[2]);
-            case GlobalFn::MIN: case GlobalFn::MAX: {
-                V result = *a[0];
-                for (size_t i = 1; i < a.size(); ++i)
-                    result = fn == GlobalFn::MIN ? U::min(result, *a[i]) : U::max(result, *a[i]);
-                return result;
-            }
             default: throw std::runtime_error("Unsupported generic numeric utility");
             }
         }
@@ -139,6 +141,25 @@ V utility(gdscript::GlobalFn fn, const Arguments &a) {
     if (info.kind == GlobalKind::FLOAT_OP || (info.kind == GlobalKind::SYSCALL && !info.impure)) {
         double args[UTILITY_MAX_FLOAT_ARGS]{};
         for (size_t j = 0; j < a.size(); ++j) args[j] = double(*a[j]);
+        // Match the running engine, including transcendental implementations.
+#define GJ_MATH_VALUES_1 args[0]
+#define GJ_MATH_VALUES_2 args[0], args[1]
+#define GJ_MATH_VALUES_3 args[0], args[1], args[2]
+#define GJ_MATH_VALUES_5 args[0], args[1], args[2], args[3], args[4]
+#define GJ_MATH_VALUES_8 args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]
+#define GJ_CALL_MATH(id, name, result, count) case GlobalFn::id: return U::name(GJ_MATH_VALUES_##count);
+        switch (fn) {
+            GJ_ENGINE_MATH(GJ_CALL_MATH)
+            case GlobalFn::LERP: return U::lerpf(args[0], args[1], args[2]);
+            case GlobalFn::SNAPPEDI: return U::snappedi(args[0], int64_t(*a[1]));
+            default: break;
+        }
+#undef GJ_CALL_MATH
+#undef GJ_MATH_VALUES_1
+#undef GJ_MATH_VALUES_2
+#undef GJ_MATH_VALUES_3
+#undef GJ_MATH_VALUES_5
+#undef GJ_MATH_VALUES_8
         const double result = eval_global_float(fn, args, a.size());
         if (info.result == GlobalResult::INT) return int64_t(result);
         if (info.result == GlobalResult::BOOL) return bool(result);

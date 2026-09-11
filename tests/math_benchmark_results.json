@@ -1,0 +1,114 @@
+{
+  "date": "2026-09-11",
+  "godot": "4.6.3-stable (7d41c59c4)",
+  "platform": "Linux x86_64",
+  "cpu": "AMD Ryzen 9 7950X",
+  "build": "Release, TinyCC",
+  "baseline_commit": "ff92eec4f6ac1ae9a132bb31221c9a644491d2c2",
+  "baseline_compiler_commit": "151b7eef65933cf11605bffa3266e7beb75af5f7",
+  "iterations": 1000000,
+  "samples": 7,
+  "method": "Median after warm-up; alternating GDScript/JIT order. Original compiler and native math dispatch were rebuilt for baseline; updated sources and build were restored afterwards. Loop results checked between languages before timing.",
+  "results": {
+    "bench_primitives": {
+      "before": {
+        "gd_samples_us": [
+          22718,
+          22710,
+          22689,
+          22677,
+          22702,
+          22751,
+          22684
+        ],
+        "jit_samples_us": [
+          64708,
+          65001,
+          64901,
+          64692,
+          65037,
+          64845,
+          65088
+        ],
+        "gd_median_us": 22702,
+        "jit_median_us": 64901
+      },
+      "after": {
+        "gd_samples_us": [
+          24714,
+          24658,
+          24684,
+          24737,
+          24638,
+          24640,
+          24844
+        ],
+        "jit_samples_us": [
+          4783,
+          4781,
+          4772,
+          4779,
+          4767,
+          4769,
+          4778
+        ],
+        "gd_median_us": 24684,
+        "jit_median_us": 4778
+      },
+      "jit_speedup": 13.583298451234826
+    },
+    "bench_engine": {
+      "before": {
+        "gd_samples_us": [
+          40206,
+          40201,
+          40189,
+          40240,
+          40399,
+          40294,
+          40208
+        ],
+        "jit_samples_us": [
+          105004,
+          105201,
+          105642,
+          105339,
+          105464,
+          105397,
+          105235
+        ],
+        "gd_median_us": 40208,
+        "jit_median_us": 105339
+      },
+      "after": {
+        "gd_samples_us": [
+          44063,
+          44102,
+          44081,
+          39697,
+          39859,
+          39834,
+          39925
+        ],
+        "jit_samples_us": [
+          30312,
+          30303,
+          30117,
+          27702,
+          26797,
+          26480,
+          26965
+        ],
+        "gd_median_us": 39925,
+        "jit_median_us": 27702
+      },
+      "jit_speedup": 3.802577431232402
+    }
+  },
+  "normalize": {
+    "iterations": 300000,
+    "before_log": "Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org\n\nCorrectness: 4096 matching frames; crystals=59 hazards=7 score=555\nGenerated C: /home/gonzo/github/godot-jit/build/release/test-data/godot/app_userdata/Godot JIT/typical_benchmark.c\nTypical benchmark: 300000 iterations, 5 crystals + 5 hazards, 60 Hz simulation; median of 7 after warm-up; alternating order; compilation/setup excluded\nGodot: 4.6.3-stable (official); CPU: AMD Ryzen 9 7950X 16-Core Processor\nthink_5: GD=0.378 us/op JIT=0.236 us/op JIT/GD=0.623 (GD 108527..122444 us; JIT 70092..76768 us)\nminigame: GD=1.985 us/op JIT=1.851 us/op JIT/GD=0.933 (GD 588624..605252 us; JIT 553067..568874 us)\ncall_floor: GD=0.113 us/op JIT=0.113 us/op JIT/GD=1.003 (GD 33877..34064 us; JIT 33951..34389 us)\nnearest_0: GD=0.130 us/op JIT=0.137 us/op JIT/GD=1.056 (GD 39000..39777 us; JIT 40904..41527 us)\nnearest_5: GD=0.280 us/op JIT=0.195 us/op JIT/GD=0.695 (GD 83816..84844 us; JIT 57851..59723 us)\niterate_5: GD=0.194 us/op JIT=0.180 us/op JIT/GD=0.927 (GD 57596..58561 us; JIT 53685..54871 us)\ndistance_5: GD=0.239 us/op JIT=0.196 us/op JIT/GD=0.822 (GD 71404..71743 us; JIT 58600..58999 us)\nnormalize: GD=0.109 us/op JIT=0.122 us/op JIT/GD=1.121 (GD 32499..33132 us; JIT 36575..36781 us)\nbatch_think: GD=0.339 us/op JIT=0.129 us/op JIT/GD=0.382 (GD 100477..103051 us; JIT 38602..39075 us)\nbatch_nearest: GD=0.237 us/op JIT=0.094 us/op JIT/GD=0.396 (GD 70224..73040 us; JIT 27763..28226 us)\nbatch_iterate: GD=0.161 us/op JIT=0.087 us/op JIT/GD=0.541 (GD 47626..48623 us; JIT 26043..26336 us)\nbatch_normalize: GD=0.080 us/op JIT=0.032 us/op JIT/GD=0.398 (GD 23882..23996 us; JIT 9399..9588 us)\nbatch_floor: GD=0.080 us/op JIT=0.018 us/op JIT/GD=0.228 (GD 24003..24128 us; JIT 5467..5557 us)\nResults: /home/gonzo/github/godot-jit/build/release/test-data/godot/app_userdata/Godot JIT/typical_benchmark.json\n",
+    "after_log": "Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org\n\nCorrectness: 4096 matching frames; crystals=59 hazards=7 score=555\nGenerated C: /home/gonzo/github/godot-jit/build/release/test-data/godot/app_userdata/Godot JIT/typical_benchmark.c\nTypical benchmark: 300000 iterations, 5 crystals + 5 hazards, 60 Hz simulation; median of 7 after warm-up; alternating order; compilation/setup excluded\nGodot: 4.6.3-stable (official); CPU: AMD Ryzen 9 7950X 16-Core Processor\nthink_5: GD=0.374 us/op JIT=0.236 us/op JIT/GD=0.630 (GD 109036..123306 us; JIT 69934..77200 us)\nminigame: GD=1.963 us/op JIT=1.872 us/op JIT/GD=0.954 (GD 585903..592725 us; JIT 554445..562874 us)\ncall_floor: GD=0.113 us/op JIT=0.106 us/op JIT/GD=0.935 (GD 33863..34222 us; JIT 31707..32064 us)\nnearest_0: GD=0.131 us/op JIT=0.128 us/op JIT/GD=0.980 (GD 39072..39583 us; JIT 38172..39210 us)\nnearest_5: GD=0.284 us/op JIT=0.188 us/op JIT/GD=0.662 (GD 84699..85322 us; JIT 56241..56496 us)\niterate_5: GD=0.195 us/op JIT=0.172 us/op JIT/GD=0.883 (GD 58402..59001 us; JIT 51517..52218 us)\ndistance_5: GD=0.237 us/op JIT=0.197 us/op JIT/GD=0.829 (GD 70654..71624 us; JIT 58909..59734 us)\nnormalize: GD=0.113 us/op JIT=0.114 us/op JIT/GD=1.006 (GD 33898..34108 us; JIT 34059..34256 us)\nbatch_think: GD=0.339 us/op JIT=0.132 us/op JIT/GD=0.390 (GD 101684..102690 us; JIT 39523..39988 us)\nbatch_nearest: GD=0.248 us/op JIT=0.099 us/op JIT/GD=0.397 (GD 74141..76099 us; JIT 29156..29723 us)\nbatch_iterate: GD=0.168 us/op JIT=0.087 us/op JIT/GD=0.518 (GD 49987..50435 us; JIT 26044..26113 us)\nbatch_normalize: GD=0.082 us/op JIT=0.031 us/op JIT/GD=0.378 (GD 24407..24543 us; JIT 9214..9290 us)\nbatch_floor: GD=0.080 us/op JIT=0.018 us/op JIT/GD=0.229 (GD 23949..24081 us; JIT 5486..5514 us)\nResults: /home/gonzo/github/godot-jit/build/release/test-data/godot/app_userdata/Godot JIT/typical_benchmark.json\n",
+    "note": "Separately measured typical suite, median of seven samples; precision in these logs is 0.001 us/op. Includes script calls and Variant entry/return overhead."
+  }
+}

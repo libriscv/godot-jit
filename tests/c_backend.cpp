@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
+#include <cmath>
 
 // Hand-written scalar host for an engine-independent backend execution test.
 // The headless Godot test exercises the actual C++ Variant ABI.
@@ -24,6 +25,21 @@ extern "C" int scalar_op(GJContext *ctx, int op, GJVariant *d, GJVariant *, cons
         return 1;
     }
     return scalar_fail(ctx, "Unexpected scalar test host operation");
+}
+// Distinctive host answers prove calls (including constant arguments) reach
+// the registered engine ABI instead of being folded or replaced with libm.
+static int math_calls = 0;
+extern "C" double engine_sin(double x) { ++math_calls; return 100 + x; }
+extern "C" double engine_log(double x) { ++math_calls; return 20 + x; }
+extern "C" GJReal test_sqrt_real(GJReal x) { return std::sqrt(x); }
+template<int N>
+void engine_normalized(void *self, const void **, void *result, int) {
+    const auto *v = static_cast<const GJReal *>(self);
+    auto *out = static_cast<GJReal *>(result);
+    GJReal squared = 0;
+    for (int j = 0; j < N; ++j) squared += v[j] * v[j];
+    GJReal length = std::sqrt(squared);
+    for (int j = 0; j < N; ++j) out[j] = length ? v[j] / length : 0;
 }
 void check(bool condition, const std::string &error) { if (!condition) throw std::runtime_error(error); }
 struct DebugCheck {
@@ -75,6 +91,12 @@ func divide(n: int) -> int:
     check(source->find("GJVariant r0") != std::string::npos, "Expected local C values");
     if (argc == 2) { std::ofstream file(argv[1]); file << *source; check(bool(file), "Cannot write emitted C"); }
     const std::vector<std::pair<std::string, const void *>> symbols = {
+        {"gj_vector2_normalized", reinterpret_cast<const void *>(&engine_normalized<2>)},
+        {"gj_vector3_normalized", reinterpret_cast<const void *>(&engine_normalized<3>)},
+        {"gj_vector4_normalized", reinterpret_cast<const void *>(&engine_normalized<4>)},
+        {"gj_math_sin", reinterpret_cast<const void *>(&engine_sin)},
+        {"gj_math_log", reinterpret_cast<const void *>(&engine_log)},
+        {"gj_sqrt_real", reinterpret_cast<const void *>(&test_sqrt_real)},
         {"gj_copy", reinterpret_cast<const void *>(&scalar_copy)},
         {"gj_destroy", reinterpret_cast<const void *>(&scalar_destroy)},
         {"gj_truth", reinterpret_cast<const void *>(&scalar_truth)},
@@ -106,6 +128,54 @@ func divide(n: int) -> int:
     check(compiler.compile_to_c("func suspended(value):\n    return await value\n").has_value(),
           "Coroutine compilation failed: " + compiler.get_error());
     check(!compiler.compile_to_c("func broken("), "Accepted invalid frontend input");
+    const std::string math_script = R"(func primitives(a, b):
+    var x = absf(a)
+    return clampf(maxf(x, b), 1.0, 5.0)
+func select(a, b):
+    return min(a, b)
+func engine_calls(x):
+    return sin(x) + log(2.0)
+func normalize(v):
+    v = v.normalized()
+    return v
+func length(v):
+    return v.length()
+)";
+    for (bool debug_math : {false, true}) {
+        gdscript::CompilerOptions math_options;
+        math_options.debug_info = debug_math;
+        math_calls = 0;
+        auto math_source = compiler.compile_to_c(math_script, math_options);
+        check(bool(math_source), compiler.get_error());
+        if (argc == 2 && !debug_math) {
+            std::ofstream file(std::string(argv[1]) + ".math.c");
+            file << *math_source;
+            check(bool(file), "Cannot write emitted math C");
+        }
+        auto math_module = godot_jit::CModule::compile(*math_source, error, symbols, "gj_entry");
+        check(bool(math_module), error);
+        auto math_entry = reinterpret_cast<GJEntry>(math_module->symbol("gj_entry"));
+        context = {}; context.error = &error;
+        GJVariant left{}, right{};
+        const GJVariant *math_args[] = {&left, &right};
+        left.type = 3; left.data.f = -3.0;
+        right.type = 2; right.data.i = 2;
+        check(math_entry(&context, 0, &result, math_args, 2) && result.type == 3 && result.data.f == 3,
+              "Inline scalar math fell back to Variant host: " + error);
+        left.type = 2; left.data.i = 9007199254740993LL;
+        right.data.i = 9007199254740994LL;
+        check(math_entry(&context, 1, &result, math_args, 2) && result.type == 2 && result.data.i == left.data.i,
+              "Generic selection lost integer precision: " + error);
+        left.type = 3; left.data.f = 3;
+        check(math_entry(&context, 2, &result, math_args, 1) && result.type == 3 && result.data.f == 125 && math_calls == 2,
+              "Transcendentals did not call the engine ABI: " + error);
+        left.type = 5; left.data.real[0] = 3; left.data.real[1] = 4;
+        check(math_entry(&context, 3, &result, math_args, 1) && result.type == 5 &&
+              result.data.real[0] == GJReal(0.6) && result.data.real[1] == GJReal(0.8),
+              "Direct normalization/aliasing failed: " + error);
+        check(math_entry(&context, 4, &result, math_args, 1) && result.type == 3 && result.data.f == 5,
+              "Vector length primitive failed: " + error);
+    }
     const std::string debug_script = "func outer(n: int):\n    return inner(n)\nfunc inner(n: int):\n    var copied = n\n    breakpoint\n    return copied\n";
     auto plain = compiler.compile_to_c(debug_script);
     check(plain && plain->find("debug_frame") == std::string::npos, "Non-debug output gained instrumentation");
