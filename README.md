@@ -54,6 +54,29 @@ assert(jit.compile_sgd("func answer(n: int) -> int:\n    return n * 2 + 2\n"))
 assert(jit.execute_function("answer", [20]) == 42)
 ```
 
+## Performance
+
+Benchmark of game-like code:
+```
++----------------------+------------------+------------------+-----------+
+| Workload             |   GDScript us/op |  godot-jit us/op |   Speedup |
++----------------------+------------------+------------------+-----------+
+| think_5              |            0.381 |            0.228 |    1.672x |
+| minigame             |            1.968 |            1.863 |    1.056x |
+| call_floor           |            0.113 |            0.110 |    1.029x |
+| nearest_0            |            0.132 |            0.133 |    0.988x |
+| nearest_5            |            0.281 |            0.187 |    1.504x |
+| iterate_5            |            0.197 |            0.175 |    1.122x |
+| distance_5           |            0.237 |            0.196 |    1.214x |
+| normalize            |            0.107 |            0.116 |    0.928x |
+| batch_think          |            0.333 |            0.129 |    2.584x |
+| batch_nearest        |            0.239 |            0.093 |    2.564x |
+| batch_iterate        |            0.158 |            0.087 |    1.815x |
+| batch_normalize      |            0.075 |            0.032 |    2.370x |
+| batch_floor          |            0.080 |            0.018 |    4.367x |
++----------------------+------------------+------------------+-----------+
+```
+
 ## Installing the addon
 
 Extract `godot-jit.zip` into your Godot 4.6+ project directory, so the extension
