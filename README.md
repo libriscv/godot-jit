@@ -56,26 +56,50 @@ assert(jit.execute_function("answer", [20]) == 42)
 
 ## Performance
 
-Benchmark of game-like code:
-```
-+----------------------+------------------+------------------+-----------+
-| Workload             |   GDScript us/op |  godot-jit us/op |   Speedup |
-+----------------------+------------------+------------------+-----------+
-| think_5              |            0.381 |            0.228 |    1.672x |
-| minigame             |            1.968 |            1.863 |    1.056x |
-| call_floor           |            0.113 |            0.110 |    1.029x |
-| nearest_0            |            0.132 |            0.133 |    0.988x |
-| nearest_5            |            0.281 |            0.187 |    1.504x |
-| iterate_5            |            0.197 |            0.175 |    1.122x |
-| distance_5           |            0.237 |            0.196 |    1.214x |
-| normalize            |            0.107 |            0.116 |    0.928x |
-| batch_think          |            0.333 |            0.129 |    2.584x |
-| batch_nearest        |            0.239 |            0.093 |    2.564x |
-| batch_iterate        |            0.158 |            0.087 |    1.815x |
-| batch_normalize      |            0.075 |            0.032 |    2.370x |
-| batch_floor          |            0.080 |            0.018 |    4.367x |
-+----------------------+------------------+------------------+-----------+
-```
+Godot 4.6.3-stable, AMD Ryzen 9 7950X, release build, 100 000 iterations.
+
+### math
+
+| Benchmark | GDScript | JIT | Speedup | insn/op GD | insn/op JIT |
+|---|---:|---:|---:|---:|---:|
+| bench_primitives | 0.0225 µs/op | 0.0044 µs/op | **5.17x** | 518 | 52 |
+| bench_engine | 0.0398 µs/op | 0.0274 µs/op | **1.45x** | 766 | 233 |
+
+Math parity: 0 failures.
+
+### loops and calls
+
+| Benchmark | GDScript | JIT | Speedup | insn/op GD | insn/op JIT |
+|---|---:|---:|---:|---:|---:|
+| integer_loop | 1713 µs | 167 µs | **10.26x** | 400 | 35 | 
+| local_calls | 21247 µs | 2666 µs | **7.97x** | 4353 | 474 |
+| gameplay_loop | 3533 µs | 791 µs | **4.47x** | 737 | 133 |
+| float_loop | 2081 µs | 607 µs | **3.43x** | 484 | 36 |
+| vector_loop | 1098 µs | 390 µs | **2.82x** | 255 | 27 |
+| object_calls | 8757 µs | 5566 µs | **1.57x** | 1800 | 1085 |
+| callable_calls | 8339 µs | 5753 µs | **1.45x** | 1839 | 1207 |
+| dictionary_loop | 12801 µs | 9917 µs | **1.29x** | 3004 | 2251 |
+| array_loop | 6510 µs | 6230 µs | **1.04x** | 1557 | 1020 |
+| **Geometric mean** | | | **2.81x** | | |
+
+### typical game-like code
+
+| Benchmark | GDScript | JIT | Speedup | insn/op GD | insn/op JIT |
+|---|---:|---:|---:|---:|---:|
+| batch_floor | 0.081 µs/op | 0.007 µs/op | **11.63x** | 1843 | 127 | 
+| batch_think | 0.341 µs/op | 0.080 µs/op | **4.26x** | 7158 | 1349 | 
+| batch_nearest | 0.252 µs/op | 0.063 µs/op | **3.97x** | 5215 | 1210 |
+| batch_normalize | 0.075 µs/op | 0.023 µs/op | **3.28x** | 1624 | 140 |
+| batch_iterate | 0.169 µs/op | 0.057 µs/op | **2.98x** | 3529 | 1072 |
+| think_5 | 0.372 µs/op | 0.172 µs/op | **2.16x** | 8059 | 3290 | 
+| nearest_5 | 0.293 µs/op | 0.147 µs/op | **1.99x** | 6116 | 3101 |
+| distance_5 | 0.243 µs/op | 0.139 µs/op | **1.75x** | 5337 | 3004 |
+| iterate_5 | 0.200 µs/op | 0.132 µs/op | **1.51x** | 4318 | 2938 |
+| nearest_0 | 0.132 µs/op | 0.096 µs/op | **1.37x** | 2945 | 2131 |
+| call_floor | 0.113 µs/op | 0.094 µs/op | **1.20x** | 2632 | 2065 |
+| minigame | 2.015 µs/op | 1.805 µs/op | **1.12x** | 40800 | 35940 |
+| normalize | 0.107 µs/op | 0.098 µs/op | **1.09x** | 2413 | 1971 |
+
 
 ## Installing the addon
 
