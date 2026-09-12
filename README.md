@@ -5,7 +5,8 @@ inside a GDExtension.
 
 This is a glue project that re-uses work that already exists by me. The compiler
 is from Godot Sandbox, the JIT is my libtcc fork from libriscv and the backend is
-more or less the AOT backend from Godot Sandbox Plus. Highly experimental.
+more or less the AOT backend from Godot Sandbox Plus. Highly experimental, though
+it does run all 118 godot demo projects for 5 seconds without errors.
 
 ## UnsafeGDScript
 
