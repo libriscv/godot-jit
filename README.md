@@ -100,6 +100,7 @@ Math parity: 0 failures.
 | minigame | 2.015 µs/op | 1.805 µs/op | **1.12x** | 40800 | 35940 |
 | normalize | 0.107 µs/op | 0.098 µs/op | **1.09x** | 2413 | 1971 |
 
+The benchmark that is likely closest to average Godot game code is think_5, about 2x GDScript performance.
 
 ## Installing the addon
 
