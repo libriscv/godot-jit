@@ -66,8 +66,6 @@ Godot 4.6.3-stable, AMD Ryzen 9 7950X, release build, 100 000 iterations.
 | bench_primitives | 0.0225 µs/op | 0.0044 µs/op | **5.17x** | 518 | 52 |
 | bench_engine | 0.0398 µs/op | 0.0274 µs/op | **1.45x** | 766 | 233 |
 
-Math parity: 0 failures.
-
 ### loops and calls
 
 | Benchmark | GDScript | JIT | Speedup | insn/op GD | insn/op JIT |
