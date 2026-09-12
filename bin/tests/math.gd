@@ -147,16 +147,27 @@ func benchmark(gd, native) -> void:
         if arg.is_valid_int(): iterations = max(1, int(arg))
     for method in ["bench_primitives", "bench_engine"]:
         var samples = [[], []]
+        var instructions = [[], []]
+        var count_instructions = OS.get_environment("GODOT_JIT_INSTRUCTIONS") == "1"
         gd.call(method, 1000)
         native.call(method, 1000)
         for trial in range(7):
             for k in range(2):
                 var which := (trial + k) % 2
                 var receiver = gd if which == 0 else native
+                var before = GodotJIT.get_instruction_count() if count_instructions else -1
                 var start := Time.get_ticks_usec()
                 receiver.call(method, iterations)
                 samples[which].append(Time.get_ticks_usec() - start)
+                var after = GodotJIT.get_instruction_count() if count_instructions else -1
+                instructions[which].append(after - before if before >= 0 and after >= before else -1)
         samples[0].sort()
         samples[1].sort()
-        print("%s: GD=%.3f us/op JIT=%.3f us/op speedup=%.2fx" % [method,
+        print("%s: GD=%.6f us/op JIT=%.6f us/op speedup=%.2fx" % [method,
             float(samples[0][3]) / iterations, float(samples[1][3]) / iterations, float(samples[0][3]) / samples[1][3]])
+        instructions[0].sort()
+        instructions[1].sort()
+        if count_instructions:
+            print("%s instructions: GD=%.3f JIT=%.3f insn/op" % [method,
+                float(instructions[0][3]) / iterations if instructions[0][0] >= 0 else -1.0,
+                float(instructions[1][3]) / iterations if instructions[1][0] >= 0 else -1.0])

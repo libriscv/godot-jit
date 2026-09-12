@@ -10,6 +10,9 @@ Defaults: release build, 100000 iterations per workload.
 Set GODOT to a Godot 4.6+ executable; otherwise use PATH or the preset's cached path.
 Set CMAKE_BUILD_PARALLEL_LEVEL to limit build jobs.
 Logs are saved under build/<preset>/benchmark-logs/.
+Linux also runs cc -O2 and counts user-space instructions per row.
+Set GODOT_JIT_BENCH_CC=clang to select a compiler, or off to skip the twin.
+Set GODOT_JIT_INSTRUCTIONS=0 to skip instruction counting.
 
 Examples:
   tests/run_benchmarks.sh
@@ -77,63 +80,42 @@ if [[ $preset == debug ]]; then config=Debug; fi
 project="$build_dir/test-project/$config"
 run_logged import "$godot" --headless --path "$project" --import
 
+export GODOT_JIT_INSTRUCTIONS=${GODOT_JIT_INSTRUCTIONS:-1}
+cc=${GODOT_JIT_BENCH_CC:-cc}
 for suite in call typical math; do
-    echo "Running $suite benchmarks ($iterations iterations)..."
-    if [[ $suite == math ]]; then
-        run_logged "$suite" "$godot" --headless --path "$project" --script res://tests/math.gd -- --benchmark "$iterations"
-    else
-        run_logged "$suite" "$godot" --headless --path "$project" --script "res://tests/${suite}_benchmark.gd" -- "$iterations"
-    fi
-    # Godot can log script errors yet exit successfully. Never report those runs.
-    if grep -Eq 'SCRIPT ERROR:|^ERROR:' "$log_dir/$suite.log"; then
-        cat "$log_dir/$suite.log" >&2
-        exit 1
-    fi
+    for compiler in tcc cc; do
+        name=$suite
+        compiler_env=(env -u GODOT_JIT_CC)
+        if [[ $compiler == cc ]]; then
+            if [[ $cc == off || $(uname -s) != Linux ]]; then
+                rm -f "$log_dir/$suite-cc.log" "$log_dir/$suite-cc.json" "$log_dir/$suite-cc.c"
+                continue
+            fi
+            name="$suite-cc"
+            compiler_env=(env "GODOT_JIT_CC=$cc")
+        fi
+        echo "Running $suite with $compiler ($iterations iterations)..."
+        if [[ $suite == math ]]; then
+            run_logged "$name" "${compiler_env[@]}" "$godot" --headless --path "$project" --script res://tests/math.gd -- --benchmark "$iterations"
+        else
+            run_logged "$name" "${compiler_env[@]}" "$godot" --headless --path "$project" --script "res://tests/${suite}_benchmark.gd" -- "$iterations" --dump-c
+        fi
+        if grep -Eq 'SCRIPT ERROR:|^ERROR:' "$log_dir/$name.log"; then
+            cat "$log_dir/$name.log" >&2
+            exit 1
+        fi
+        if [[ $suite == typical ]]; then
+            report=$(sed -n 's/^Results: //p' "$log_dir/$name.log")
+            cp -- "$report" "$log_dir/$name.json"
+        fi
+        if [[ $suite != math ]]; then
+            generated=$(sed -n 's/^Generated C: //p' "$log_dir/$name.log")
+            cp -- "$generated" "$log_dir/$name.c"
+            if [[ $compiler == cc ]]; then cmp -- "$log_dir/$suite.c" "$log_dir/$suite-cc.c"; fi
+        fi
+    done
 done
 
-printf '\nBuild: %s; iterations: %s; speedup = GDScript / godot-jit (>1 is faster).\n' "$preset" "$iterations"
-echo 'Times are median microseconds per operation; compilation/setup excluded.'
+printf '\nBuild: %s; iterations: %s\n' "$preset" "$iterations"
 echo "Logs: $log_dir"
-
-# Normalize call totals to us/op; typical already reports us/op and JIT/GD.
-awk -v iterations="$iterations" '
-function border() {
-    print "+----------------------+------------------+------------------+-----------+"
-}
-function header(title) {
-    print "\n" title
-    border()
-    printf "| %-20s | %16s | %16s | %9s |\n", "Workload", "GDScript us/op", "godot-jit us/op", "Speedup"
-    border()
-}
-function row(name, gd, jit, ratio) {
-    sub(/:$/, "", name)
-    speedup = ratio > 0 ? sprintf("%.3fx", 1 / ratio) : "n/a"
-    printf "| %-20s | %16.3f | %16.3f | %9s |\n", name, gd / iterations, jit / iterations, speedup
-}
-/^Call benchmark:/ { header("Calls and loops (median of 5 after warm-up)") }
-/^[a-z0-9_]+: GDScript=[0-9]+ us UnsafeGDScript=[0-9]+ us/ {
-    split($2, gd, "="); split($4, jit, "=")
-    row($1, gd[2], jit[2], gd[2] > 0 ? jit[2] / gd[2] : 0); calls++
-}
-/^Typical benchmark:/ {
-    border()
-    header("Typical minigame (median of 7 after warm-up; alternating order)")
-}
-/^Godot:/ { print $0 > "/dev/stderr" }
-/^[a-z0-9_]+: GD=/ {
-    split($2, gd, "="); split($4, jit, "="); split($6, ratio, "=")
-    row($1, gd[2] * iterations, jit[2] * iterations, ratio[2]); typical++
-}
-END {
-    border()
-    if (calls != 9 || typical != 13) {
-        print "Incomplete benchmark results; inspect the logs." > "/dev/stderr"
-        exit 1
-    }
-}
-' "$log_dir/call.log" "$log_dir/typical.log"
-
-echo
-echo 'Math loops (median of 7 after warm-up; alternating order; Godot engine math)'
-awk '/^bench_/ { print }' "$log_dir/math.log"
+python3 tests/benchmark_report.py --logs "$log_dir" --iterations "$iterations"

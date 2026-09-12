@@ -5,6 +5,11 @@
 #include <compiler.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#ifdef __linux__
+#include <linux/perf_event.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#endif
 
 namespace godot {
 void GodotJIT::_bind_methods() {
@@ -17,6 +22,35 @@ void GodotJIT::_bind_methods() {
     ClassDB::bind_method(D_METHOD("is_compiled"), &GodotJIT::is_compiled);
     ClassDB::bind_method(D_METHOD("get_error"), &GodotJIT::get_error);
     ClassDB::bind_method(D_METHOD("clear"), &GodotJIT::clear);
+    ClassDB::bind_static_method("GodotJIT", D_METHOD("get_instruction_count"), &GodotJIT::get_instruction_count);
+}
+
+int64_t GodotJIT::get_instruction_count() {
+#ifdef __linux__
+    // Per-thread, user-space retired instructions. No sampling, kernel work,
+    // compilation, or other Godot threads enter a measured workload's delta.
+    struct Counter {
+        int fd = -1;
+        Counter() {
+            perf_event_attr attr{};
+            attr.type = PERF_TYPE_HARDWARE;
+            attr.size = sizeof(attr);
+            attr.config = PERF_COUNT_HW_INSTRUCTIONS;
+            attr.exclude_kernel = 1;
+            attr.exclude_hv = 1;
+            attr.read_format = PERF_FORMAT_TOTAL_TIME_ENABLED | PERF_FORMAT_TOTAL_TIME_RUNNING;
+            fd = syscall(__NR_perf_event_open, &attr, 0, -1, -1, PERF_FLAG_FD_CLOEXEC);
+        }
+        ~Counter() { if (fd >= 0) close(fd); }
+    };
+    thread_local Counter counter;
+    uint64_t data[3];
+    // Reject multiplexed counters rather than presenting scaled estimates as
+    // stable instruction counts. -1 means unavailable, never zero work.
+    if (counter.fd >= 0 && read(counter.fd, data, sizeof(data)) == sizeof(data) && data[1] == data[2])
+        return data[0];
+#endif
+    return -1;
 }
 
 bool GodotJIT::compile_c(const String &source) {

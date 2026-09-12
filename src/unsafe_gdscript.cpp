@@ -469,7 +469,7 @@ Error UnsafeGDScript::_reload(bool keep) {
     compile_error = String();
     for (auto &snapshot : snapshots) {
         auto *instance = snapshot.first;
-        instance->state = std::make_shared<NativeState>(program, instance->owner);
+        instance->state = std::make_shared<NativeState>(program, instance->owner, true);
         if (!instance->placeholder && !instance->state->invoke(-3, nullptr, 0, result)) {
             compile_error = str(instance->state->error);
             program = previous_program;
@@ -583,7 +583,7 @@ UnsafeGDScriptInstance::UnsafeGDScriptInstance(Object *o, UnsafeGDScript *s, boo
         state = s->static_state;
     else {
         script = Ref<UnsafeGDScript>(s);
-        state = s->program ? std::make_shared<NativeState>(s->program, o) : nullptr;
+        state = s->program ? std::make_shared<NativeState>(s->program, o, true) : nullptr;
         s->instances.insert(this);
     }
 }

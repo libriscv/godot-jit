@@ -147,19 +147,24 @@ func run_workload(receiver, method: String, iterations: int, world: Dictionary) 
 
 func measure_pair(gd, native, method: String, iterations: int) -> Dictionary:
     var samples = [[], []]
+    var instructions = [[], []]
+    var count_instructions = OS.get_environment("GODOT_JIT_INSTRUCTIONS") == "1"
     var reference: Variant
     for repeat in range(8): # One warm-up and seven measured samples; alternate order.
         for index in ([0, 1] if repeat % 2 == 0 else [1, 0]):
             var receiver = gd if index == 0 else native
             var world = make_world()
+            var before = GodotJIT.get_instruction_count() if count_instructions else -1
             var start = Time.get_ticks_usec()
             var result: Variant = run_workload(receiver, method, iterations, world)
             var elapsed = Time.get_ticks_usec() - start
+            var after = GodotJIT.get_instruction_count() if count_instructions else -1
             if repeat == 0 and index == 0:
                 reference = result
             check(typeof(result) == typeof(reference) and result == reference, "Unstable/mismatched result: " + method)
             if repeat > 0:
                 samples[index].append(elapsed)
+                instructions[index].append(after - before if before >= 0 and after >= before else -1)
     samples[0].sort()
     samples[1].sort()
     var gd_us: int = samples[0][3]
@@ -167,7 +172,13 @@ func measure_pair(gd, native, method: String, iterations: int) -> Dictionary:
     print("%s: GD=%.3f us/op JIT=%.3f us/op JIT/GD=%.3f (GD %d..%d us; JIT %d..%d us)" % [
         method, float(gd_us) / iterations, float(native_us) / iterations, float(native_us) / max(1, gd_us),
         samples[0][0], samples[0][-1], samples[1][0], samples[1][-1]])
-    return {"workload": method, "iterations": iterations, "gd_us": gd_us, "jit_us": native_us,
+    instructions[0].sort()
+    instructions[1].sort()
+    if count_instructions:
+        print("%s instructions: GD=%.3f JIT=%.3f insn/op" % [method,
+            float(instructions[0][3]) / iterations if instructions[0][0] >= 0 else -1.0,
+            float(instructions[1][3]) / iterations if instructions[1][0] >= 0 else -1.0])
+    return {"gd_instructions": instructions[0], "jit_instructions": instructions[1], "workload": method, "iterations": iterations, "gd_us": gd_us, "jit_us": native_us,
         "ratio": float(native_us) / max(1, gd_us), "gd_samples_us": samples[0], "jit_samples_us": samples[1], "checksum": var_to_str(reference)}
 
 func _initialize() -> void:
@@ -213,6 +224,8 @@ func _initialize() -> void:
     print("Godot: ", Engine.get_version_info().string, "; CPU: ", OS.get_processor_name())
     var results: Array = []
     for method in WORKLOADS:
+        if not OS.get_environment("GODOT_JIT_BENCH_ROW").is_empty() and method != OS.get_environment("GODOT_JIT_BENCH_ROW"):
+            continue
         results.append(measure_pair(gd, native, method, iterations))
         if failures:
             quit(1)

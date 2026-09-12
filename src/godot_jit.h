@@ -21,6 +21,7 @@ class GodotJIT : public RefCounted {
     bool is_compiled() const { return module_ != nullptr || native_ != nullptr; }
     String get_error() const { return String::utf8(error_.c_str()); }
     void clear();
+    static int64_t get_instruction_count();
 
   private:
     std::shared_ptr<godot_jit::CModule> module_;

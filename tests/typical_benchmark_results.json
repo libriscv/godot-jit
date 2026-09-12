@@ -1390,5 +1390,4550 @@
       ],
       "seed": 1234567
     }
-  ]
+  ],
+  "regression_gate": {
+    "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+    "description": "2026-09-12 local release baseline: slowest of three 100000-operation ratios plus 10%, rounded upward to 0.01. These are regression limits, not the plan acceptance targets.",
+    "max_jit_gd": {
+      "think_5": 0.52,
+      "minigame": 1.0,
+      "call_floor": 0.96,
+      "nearest_0": 0.86,
+      "nearest_5": 0.58,
+      "iterate_5": 0.77,
+      "distance_5": 0.67,
+      "normalize": 1.04,
+      "batch_think": 0.28,
+      "batch_nearest": 0.28,
+      "batch_iterate": 0.4,
+      "batch_normalize": 0.34,
+      "batch_floor": 0.1
+    }
+  },
+  "baseline_plan_2026_09_12": {
+    "measured_on": "2026-09-12",
+    "host_revision": "15fe34fc3676bfe2bd6b5773268408cbf39d8de7 plus working changes",
+    "compiler_revision": "58f1357d92f61f6d158c6caa60a4127ba6b0fbc2 plus working changes",
+    "configuration": "Release; AMD Ryzen 9 7950X; Linux 6.11.0-29 x86_64; Godot 4.6.3 stable; cc GCC 13.3.0 -O2; 100000 operations/row; retired userspace instruction counts enabled",
+    "runs": [
+      {
+        "run": 1,
+        "suites": {
+          "call": {
+            "tcc": {
+              "integer_loop": {
+                "gd": 0.01736,
+                "jit": 0.00167,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 35.05
+              },
+              "float_loop": {
+                "gd": 0.02094,
+                "jit": 0.0061,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 36.056
+              },
+              "array_loop": {
+                "gd": 0.06517,
+                "jit": 0.05632,
+                "checksum": "625500000",
+                "gd_instructions": 1557.086,
+                "jit_instructions": 1020.084
+              },
+              "dictionary_loop": {
+                "gd": 0.13847,
+                "jit": 0.10431,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2251.116
+              },
+              "vector_loop": {
+                "gd": 0.01101,
+                "jit": 0.00391,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 27.072
+              },
+              "gameplay_loop": {
+                "gd": 0.03486,
+                "jit": 0.00795,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 133.182
+              },
+              "local_calls": {
+                "gd": 0.21676,
+                "jit": 0.02665,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.082,
+                "jit_instructions": 474.074
+              },
+              "object_calls": {
+                "gd": 0.08613,
+                "jit": 0.05787,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.092,
+                "jit_instructions": 1085.085
+              },
+              "callable_calls": {
+                "gd": 0.08465,
+                "jit": 0.05848,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.096,
+                "jit_instructions": 1207.088
+              }
+            },
+            "cc": {
+              "integer_loop": {
+                "gd": 0.01708,
+                "jit": 0.00019,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 5.049
+              },
+              "float_loop": {
+                "gd": 0.02099,
+                "jit": 0.00112,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 8.054
+              },
+              "array_loop": {
+                "gd": 0.06517,
+                "jit": 0.04928,
+                "checksum": "625500000",
+                "gd_instructions": 1557.086,
+                "jit_instructions": 884.082
+              },
+              "dictionary_loop": {
+                "gd": 0.13688,
+                "jit": 0.09571,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2096.113
+              },
+              "vector_loop": {
+                "gd": 0.011,
+                "jit": 0.00056,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 5.07
+              },
+              "gameplay_loop": {
+                "gd": 0.03471,
+                "jit": 0.00489,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 88.241
+              },
+              "local_calls": {
+                "gd": 0.21397,
+                "jit": 0.02498,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.081,
+                "jit_instructions": 272.073
+              },
+              "object_calls": {
+                "gd": 0.08319,
+                "jit": 0.0546,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.089,
+                "jit_instructions": 926.084
+              },
+              "callable_calls": {
+                "gd": 0.08521,
+                "jit": 0.05892,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.095,
+                "jit_instructions": 1047.087
+              }
+            }
+          },
+          "typical": {
+            "tcc": {
+              "think_5": {
+                "gd": 0.3828,
+                "jit": 0.17017,
+                "gd_instructions": 8058.963,
+                "jit_instructions": 3290.499
+              },
+              "minigame": {
+                "gd": 2.04073,
+                "jit": 1.82956,
+                "gd_instructions": 40799.63,
+                "jit_instructions": 35939.954
+              },
+              "call_floor": {
+                "gd": 0.11669,
+                "jit": 0.09471,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 2065.081
+              },
+              "nearest_0": {
+                "gd": 0.1309,
+                "jit": 0.09612,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2131.096
+              },
+              "nearest_5": {
+                "gd": 0.29186,
+                "jit": 0.14782,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 3100.528
+              },
+              "iterate_5": {
+                "gd": 0.21396,
+                "jit": 0.13334,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2938.099
+              },
+              "distance_5": {
+                "gd": 0.25197,
+                "jit": 0.13947,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 3004.105
+              },
+              "normalize": {
+                "gd": 0.11515,
+                "jit": 0.0982,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1971.112
+              },
+              "batch_think": {
+                "gd": 0.34281,
+                "jit": 0.0835,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1349.129
+              },
+              "batch_nearest": {
+                "gd": 0.25205,
+                "jit": 0.06226,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 1210.129
+              },
+              "batch_iterate": {
+                "gd": 0.18081,
+                "jit": 0.05671,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 1072.129
+              },
+              "batch_normalize": {
+                "gd": 0.08342,
+                "jit": 0.02288,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 140.129
+              },
+              "batch_floor": {
+                "gd": 0.08312,
+                "jit": 0.00696,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 127.128
+              }
+            },
+            "cc": {
+              "think_5": {
+                "gd": 0.37969,
+                "jit": 0.14781,
+                "gd_instructions": 8058.964,
+                "jit_instructions": 2967.44
+              },
+              "minigame": {
+                "gd": 1.95724,
+                "jit": 1.72217,
+                "gd_instructions": 40799.629,
+                "jit_instructions": 35615.168
+              },
+              "call_floor": {
+                "gd": 0.11466,
+                "jit": 0.08833,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 1942.081
+              },
+              "nearest_0": {
+                "gd": 0.13272,
+                "jit": 0.09113,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2038.096
+              },
+              "nearest_5": {
+                "gd": 0.29435,
+                "jit": 0.13722,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 2837.468
+              },
+              "iterate_5": {
+                "gd": 0.19314,
+                "jit": 0.12142,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2740.099
+              },
+              "distance_5": {
+                "gd": 0.23771,
+                "jit": 0.12137,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 2788.105
+              },
+              "normalize": {
+                "gd": 0.10788,
+                "jit": 0.08785,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1903.112
+              },
+              "batch_think": {
+                "gd": 0.34317,
+                "jit": 0.05798,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1030.127
+              },
+              "batch_nearest": {
+                "gd": 0.25175,
+                "jit": 0.05582,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 948.128
+              },
+              "batch_iterate": {
+                "gd": 0.17348,
+                "jit": 0.04889,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 873.128
+              },
+              "batch_normalize": {
+                "gd": 0.07538,
+                "jit": 0.00261,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 38.128
+              },
+              "batch_floor": {
+                "gd": 0.08014,
+                "jit": 0.00057,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 2.627
+              }
+            }
+          },
+          "math": {
+            "tcc": {
+              "bench_primitives": {
+                "gd": 0.02344,
+                "jit": 0.00438,
+                "gd_instructions": 518.049,
+                "jit_instructions": 52.042
+              },
+              "bench_engine": {
+                "gd": 0.04024,
+                "jit": 0.02766,
+                "gd_instructions": 766.048,
+                "jit_instructions": 233.04
+              }
+            },
+            "cc": {
+              "bench_primitives": {
+                "gd": 0.02257,
+                "jit": 0.00042,
+                "gd_instructions": 518.049,
+                "jit_instructions": 10.04
+              },
+              "bench_engine": {
+                "gd": 0.04003,
+                "jit": 0.01579,
+                "gd_instructions": 766.048,
+                "jit_instructions": 198.039
+              }
+            }
+          }
+        },
+        "typical_tcc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896301,
+                805896302,
+                805896302,
+                805896304,
+                805896366,
+                805896368,
+                805896576
+              ],
+              "gd_samples_us": [
+                38015,
+                38092,
+                38100,
+                38280,
+                38327,
+                38531,
+                38913
+              ],
+              "gd_us": 38280,
+              "iterations": 100000,
+              "jit_instructions": [
+                329049876,
+                329049876,
+                329049876,
+                329049940,
+                329049940,
+                329049965,
+                329050098
+              ],
+              "jit_samples_us": [
+                16984,
+                17011,
+                17015,
+                17017,
+                17043,
+                17065,
+                17089
+              ],
+              "jit_us": 17017,
+              "ratio": 0.444540229885057,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962132,
+                4079962133,
+                4079962147,
+                4079962952,
+                4079962953,
+                4079962958,
+                4079962961
+              ],
+              "gd_samples_us": [
+                203024,
+                203817,
+                204032,
+                204073,
+                204586,
+                206360,
+                206587
+              ],
+              "gd_us": 204073,
+              "iterations": 100000,
+              "jit_instructions": [
+                3593995309,
+                3593995311,
+                3593995370,
+                3593995399,
+                3593996133,
+                3593996136,
+                3593996142
+              ],
+              "jit_samples_us": [
+                182660,
+                182667,
+                182789,
+                182956,
+                184092,
+                185906,
+                186326
+              ],
+              "jit_us": 182956,
+              "ratio": 0.896522322894258,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208008,
+                263208011,
+                263208011,
+                263208011,
+                263208073,
+                263208075,
+                263208075
+              ],
+              "gd_samples_us": [
+                11638,
+                11649,
+                11669,
+                11669,
+                11695,
+                11697,
+                11813
+              ],
+              "gd_us": 11669,
+              "iterations": 100000,
+              "jit_instructions": [
+                206508005,
+                206508005,
+                206508007,
+                206508069,
+                206508069,
+                206508071,
+                206508071
+              ],
+              "jit_samples_us": [
+                9445,
+                9464,
+                9469,
+                9471,
+                9474,
+                9480,
+                9519
+              ],
+              "jit_us": 9471,
+              "ratio": 0.811637672465507,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509515,
+                294509516,
+                294509516,
+                294509516,
+                294509580,
+                294509580,
+                294509580
+              ],
+              "gd_samples_us": [
+                13053,
+                13072,
+                13087,
+                13090,
+                13143,
+                13153,
+                13227
+              ],
+              "gd_us": 13090,
+              "iterations": 100000,
+              "jit_instructions": [
+                213109510,
+                213109510,
+                213109510,
+                213109572,
+                213109572,
+                213109574,
+                213109574
+              ],
+              "jit_samples_us": [
+                9583,
+                9595,
+                9606,
+                9612,
+                9612,
+                9616,
+                9628
+              ],
+              "jit_us": 9612,
+              "ratio": 0.734300993124523,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599105,
+                611599107,
+                611599107,
+                611599108,
+                611599170,
+                611599171,
+                611599171
+              ],
+              "gd_samples_us": [
+                29069,
+                29149,
+                29176,
+                29186,
+                29199,
+                29237,
+                29298
+              ],
+              "gd_us": 29186,
+              "iterations": 100000,
+              "jit_instructions": [
+                310052694,
+                310052695,
+                310052695,
+                310052758,
+                310052759,
+                310052759,
+                310052759
+              ],
+              "jit_samples_us": [
+                14749,
+                14755,
+                14780,
+                14782,
+                14786,
+                14791,
+                14820
+              ],
+              "jit_us": 14782,
+              "ratio": 0.506475707531008,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809902,
+                431809902,
+                431809903,
+                431809904,
+                431809966,
+                431809966,
+                431809968
+              ],
+              "gd_samples_us": [
+                21188,
+                21223,
+                21236,
+                21396,
+                21549,
+                21657,
+                21869
+              ],
+              "gd_us": 21396,
+              "iterations": 100000,
+              "jit_instructions": [
+                293809886,
+                293809886,
+                293809888,
+                293809950,
+                293809950,
+                293809950,
+                293809950
+              ],
+              "jit_samples_us": [
+                13302,
+                13305,
+                13313,
+                13334,
+                13335,
+                13342,
+                13363
+              ],
+              "jit_us": 13334,
+              "ratio": 0.623200598242662,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710475,
+                533710477,
+                533710478,
+                533710478,
+                533710543,
+                533710543,
+                533710544
+              ],
+              "gd_samples_us": [
+                25047,
+                25111,
+                25177,
+                25197,
+                25298,
+                25324,
+                25383
+              ],
+              "gd_us": 25197,
+              "iterations": 100000,
+              "jit_instructions": [
+                300410456,
+                300410456,
+                300410456,
+                300410521,
+                300410521,
+                300410521,
+                300410521
+              ],
+              "jit_samples_us": [
+                13887,
+                13946,
+                13947,
+                13947,
+                13958,
+                13962,
+                13973
+              ],
+              "jit_us": 13947,
+              "ratio": 0.553518275985236,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311104,
+                241311104,
+                241311106,
+                241311106,
+                241311168,
+                241311168,
+                241311170
+              ],
+              "gd_samples_us": [
+                11492,
+                11513,
+                11514,
+                11515,
+                11582,
+                11584,
+                11622
+              ],
+              "gd_us": 11515,
+              "iterations": 100000,
+              "jit_instructions": [
+                197111100,
+                197111102,
+                197111102,
+                197111166,
+                197111166,
+                197111166,
+                197111166
+              ],
+              "jit_samples_us": [
+                9798,
+                9801,
+                9806,
+                9820,
+                9823,
+                9824,
+                9827
+              ],
+              "jit_us": 9820,
+              "ratio": 0.852800694745984,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813843,
+                715813844,
+                715813845,
+                715813846,
+                715813907,
+                715813908,
+                715813908
+              ],
+              "gd_samples_us": [
+                34026,
+                34207,
+                34273,
+                34281,
+                34385,
+                34436,
+                34476
+              ],
+              "gd_us": 34281,
+              "iterations": 100000,
+              "jit_instructions": [
+                134912790,
+                134912793,
+                134912793,
+                134912855,
+                134912855,
+                134912855,
+                134912857
+              ],
+              "jit_samples_us": [
+                8314,
+                8334,
+                8339,
+                8350,
+                8351,
+                8401,
+                8411
+              ],
+              "jit_us": 8350,
+              "ratio": 0.243575158250926,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513864,
+                521513864,
+                521513864,
+                521513864,
+                521513927,
+                521513928,
+                521513930
+              ],
+              "gd_samples_us": [
+                25106,
+                25190,
+                25204,
+                25205,
+                25223,
+                25249,
+                25254
+              ],
+              "gd_us": 25205,
+              "iterations": 100000,
+              "jit_instructions": [
+                121012822,
+                121012822,
+                121012822,
+                121012886,
+                121012886,
+                121012888,
+                121012888
+              ],
+              "jit_samples_us": [
+                6054,
+                6145,
+                6149,
+                6226,
+                6246,
+                6282,
+                6285
+              ],
+              "jit_us": 6226,
+              "ratio": 0.247014481253719,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913828,
+                352913828,
+                352913830,
+                352913832,
+                352913892,
+                352913892,
+                352913892
+              ],
+              "gd_samples_us": [
+                17541,
+                17757,
+                17975,
+                18081,
+                18381,
+                18660,
+                19531
+              ],
+              "gd_us": 18081,
+              "iterations": 100000,
+              "jit_instructions": [
+                107212799,
+                107212801,
+                107212801,
+                107212863,
+                107212863,
+                107212865,
+                107212865
+              ],
+              "jit_samples_us": [
+                5653,
+                5667,
+                5668,
+                5671,
+                5682,
+                5682,
+                5690
+              ],
+              "jit_us": 5671,
+              "ratio": 0.313644156849732,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413823,
+                162413825,
+                162413826,
+                162413830,
+                162413889,
+                162413891,
+                162414155
+              ],
+              "gd_samples_us": [
+                7739,
+                8334,
+                8339,
+                8342,
+                8353,
+                8371,
+                8696
+              ],
+              "gd_us": 8342,
+              "iterations": 100000,
+              "jit_instructions": [
+                14012809,
+                14012809,
+                14012813,
+                14012872,
+                14012873,
+                14012873,
+                14012873
+              ],
+              "jit_samples_us": [
+                2268,
+                2276,
+                2285,
+                2288,
+                2292,
+                2295,
+                2321
+              ],
+              "jit_us": 2288,
+              "ratio": 0.274274754255574,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313792,
+                184313794,
+                184313794,
+                184313794,
+                184313856,
+                184313856,
+                184314003
+              ],
+              "gd_samples_us": [
+                8256,
+                8299,
+                8310,
+                8312,
+                8326,
+                8498,
+                8583
+              ],
+              "gd_us": 8312,
+              "iterations": 100000,
+              "jit_instructions": [
+                12712777,
+                12712777,
+                12712777,
+                12712839,
+                12712839,
+                12712839,
+                12712841
+              ],
+              "jit_samples_us": [
+                687,
+                694,
+                695,
+                696,
+                696,
+                700,
+                702
+              ],
+              "jit_us": 696,
+              "ratio": 0.0837343599615014,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "typical_cc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896300,
+                805896302,
+                805896302,
+                805896367,
+                805896532,
+                805896596,
+                805896655
+              ],
+              "gd_samples_us": [
+                36813,
+                37157,
+                37607,
+                37969,
+                38054,
+                38157,
+                38503
+              ],
+              "gd_us": 37969,
+              "iterations": 100000,
+              "jit_instructions": [
+                296743926,
+                296743990,
+                296743991,
+                296744007,
+                296744090,
+                296744187,
+                296744204
+              ],
+              "jit_samples_us": [
+                14690,
+                14746,
+                14777,
+                14781,
+                14879,
+                14890,
+                15246
+              ],
+              "jit_us": 14781,
+              "ratio": 0.389291263925834,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962112,
+                4079962113,
+                4079962125,
+                4079962934,
+                4079962936,
+                4079962936,
+                4079962939
+              ],
+              "gd_samples_us": [
+                192974,
+                194098,
+                195345,
+                195724,
+                195857,
+                196697,
+                196740
+              ],
+              "gd_us": 195724,
+              "iterations": 100000,
+              "jit_instructions": [
+                3561516173,
+                3561516175,
+                3561516176,
+                3561516791,
+                3561516995,
+                3561516999,
+                3561517006
+              ],
+              "jit_samples_us": [
+                171666,
+                172016,
+                172210,
+                172217,
+                172337,
+                172465,
+                172922
+              ],
+              "jit_us": 172217,
+              "ratio": 0.879897202182665,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208009,
+                263208009,
+                263208011,
+                263208011,
+                263208072,
+                263208073,
+                263208075
+              ],
+              "gd_samples_us": [
+                11437,
+                11450,
+                11458,
+                11466,
+                11474,
+                11489,
+                11491
+              ],
+              "gd_us": 11466,
+              "iterations": 100000,
+              "jit_instructions": [
+                194208003,
+                194208005,
+                194208005,
+                194208069,
+                194208069,
+                194208069,
+                194208069
+              ],
+              "jit_samples_us": [
+                8802,
+                8807,
+                8810,
+                8833,
+                8846,
+                8858,
+                8865
+              ],
+              "jit_us": 8833,
+              "ratio": 0.770364556078842,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509516,
+                294509516,
+                294509516,
+                294509518,
+                294509580,
+                294509580,
+                294509580
+              ],
+              "gd_samples_us": [
+                13241,
+                13246,
+                13251,
+                13272,
+                13280,
+                13299,
+                13334
+              ],
+              "gd_us": 13272,
+              "iterations": 100000,
+              "jit_instructions": [
+                203809508,
+                203809508,
+                203809508,
+                203809572,
+                203809572,
+                203809572,
+                203809574
+              ],
+              "jit_samples_us": [
+                9064,
+                9103,
+                9110,
+                9113,
+                9119,
+                9132,
+                9141
+              ],
+              "jit_us": 9113,
+              "ratio": 0.68663351416516,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599107,
+                611599107,
+                611599109,
+                611599136,
+                611599172,
+                611599173,
+                611599191
+              ],
+              "gd_samples_us": [
+                28663,
+                29301,
+                29368,
+                29435,
+                29460,
+                29494,
+                29573
+              ],
+              "gd_us": 29435,
+              "iterations": 100000,
+              "jit_instructions": [
+                283746747,
+                283746749,
+                283746813,
+                283746813,
+                283746813,
+                283746929,
+                283746956
+              ],
+              "jit_samples_us": [
+                13699,
+                13703,
+                13710,
+                13722,
+                13743,
+                14078,
+                14422
+              ],
+              "jit_us": 13722,
+              "ratio": 0.466179718022762,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809898,
+                431809898,
+                431809899,
+                431809911,
+                431809964,
+                431809964,
+                431810007
+              ],
+              "gd_samples_us": [
+                19048,
+                19119,
+                19128,
+                19314,
+                19337,
+                19512,
+                19667
+              ],
+              "gd_us": 19314,
+              "iterations": 100000,
+              "jit_instructions": [
+                274009884,
+                274009884,
+                274009884,
+                274009948,
+                274009948,
+                274009953,
+                274009998
+              ],
+              "jit_samples_us": [
+                12102,
+                12130,
+                12137,
+                12142,
+                12155,
+                12283,
+                12285
+              ],
+              "jit_us": 12142,
+              "ratio": 0.628663145904525,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710474,
+                533710476,
+                533710476,
+                533710479,
+                533710539,
+                533710539,
+                533710541
+              ],
+              "gd_samples_us": [
+                23696,
+                23729,
+                23754,
+                23771,
+                23775,
+                23786,
+                23800
+              ],
+              "gd_us": 23771,
+              "iterations": 100000,
+              "jit_instructions": [
+                278810452,
+                278810452,
+                278810452,
+                278810516,
+                278810517,
+                278810518,
+                278810596
+              ],
+              "jit_samples_us": [
+                12098,
+                12109,
+                12115,
+                12137,
+                12140,
+                12201,
+                12765
+              ],
+              "jit_us": 12137,
+              "ratio": 0.510580118631947,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311103,
+                241311104,
+                241311104,
+                241311104,
+                241311166,
+                241311168,
+                241311168
+              ],
+              "gd_samples_us": [
+                10758,
+                10768,
+                10785,
+                10788,
+                10807,
+                10810,
+                10825
+              ],
+              "gd_us": 10788,
+              "iterations": 100000,
+              "jit_instructions": [
+                190311100,
+                190311100,
+                190311100,
+                190311162,
+                190311163,
+                190311164,
+                190311164
+              ],
+              "jit_samples_us": [
+                8743,
+                8746,
+                8754,
+                8785,
+                8793,
+                8800,
+                8890
+              ],
+              "jit_us": 8785,
+              "ratio": 0.814330737856878,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813844,
+                715813845,
+                715813846,
+                715813846,
+                715813907,
+                715813908,
+                715813910
+              ],
+              "gd_samples_us": [
+                34255,
+                34288,
+                34300,
+                34317,
+                34319,
+                34336,
+                34346
+              ],
+              "gd_us": 34317,
+              "iterations": 100000,
+              "jit_instructions": [
+                103012677,
+                103012679,
+                103012679,
+                103012742,
+                103012743,
+                103012743,
+                103012743
+              ],
+              "jit_samples_us": [
+                5791,
+                5791,
+                5795,
+                5798,
+                5808,
+                5809,
+                5819
+              ],
+              "jit_us": 5798,
+              "ratio": 0.168954162659906,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513864,
+                521513864,
+                521513864,
+                521513866,
+                521513928,
+                521513928,
+                521513936
+              ],
+              "gd_samples_us": [
+                25101,
+                25147,
+                25149,
+                25175,
+                25179,
+                25197,
+                25214
+              ],
+              "gd_us": 25175,
+              "iterations": 100000,
+              "jit_instructions": [
+                94812712,
+                94812714,
+                94812714,
+                94812776,
+                94812778,
+                94812778,
+                94812778
+              ],
+              "jit_samples_us": [
+                5581,
+                5581,
+                5581,
+                5582,
+                5597,
+                5599,
+                5609
+              ],
+              "jit_us": 5582,
+              "ratio": 0.221727904667329,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913826,
+                352913826,
+                352913828,
+                352913828,
+                352913890,
+                352913892,
+                352913892
+              ],
+              "gd_samples_us": [
+                17324,
+                17324,
+                17342,
+                17348,
+                17351,
+                17354,
+                17389
+              ],
+              "gd_us": 17348,
+              "iterations": 100000,
+              "jit_instructions": [
+                87312689,
+                87312689,
+                87312691,
+                87312755,
+                87312755,
+                87312755,
+                87312755
+              ],
+              "jit_samples_us": [
+                4880,
+                4881,
+                4882,
+                4889,
+                4898,
+                4905,
+                4913
+              ],
+              "jit_us": 4889,
+              "ratio": 0.281819229882407,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413822,
+                162413822,
+                162413824,
+                162413824,
+                162413886,
+                162413888,
+                162413888
+              ],
+              "gd_samples_us": [
+                7530,
+                7534,
+                7535,
+                7538,
+                7545,
+                7556,
+                7556
+              ],
+              "gd_us": 7538,
+              "iterations": 100000,
+              "jit_instructions": [
+                3812691,
+                3812691,
+                3812691,
+                3812755,
+                3812755,
+                3812755,
+                3812757
+              ],
+              "jit_samples_us": [
+                260,
+                260,
+                261,
+                261,
+                262,
+                264,
+                266
+              ],
+              "jit_us": 261,
+              "ratio": 0.0346245688511542,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313792,
+                184313792,
+                184313792,
+                184313792,
+                184313855,
+                184313855,
+                184313856
+              ],
+              "gd_samples_us": [
+                7983,
+                8002,
+                8010,
+                8014,
+                8020,
+                8044,
+                8046
+              ],
+              "gd_us": 8014,
+              "iterations": 100000,
+              "jit_instructions": [
+                262606,
+                262606,
+                262607,
+                262670,
+                262670,
+                262670,
+                262671
+              ],
+              "jit_samples_us": [
+                56,
+                57,
+                57,
+                57,
+                57,
+                57,
+                59
+              ],
+              "jit_us": 57,
+              "ratio": 0.00711255303219366,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "generated_c_sha256": {
+          "call": "04254d50a5f206534a79d8496d7ef8ec222a1a04bbbb0013e7c350e43543b4c6",
+          "typical": "4cd96d7f64c6339c1e557980047ff2d1d8fe69954294c778a74f45cbe9475b18"
+        }
+      },
+      {
+        "run": 2,
+        "suites": {
+          "call": {
+            "tcc": {
+              "integer_loop": {
+                "gd": 0.01701,
+                "jit": 0.00167,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 35.05
+              },
+              "float_loop": {
+                "gd": 0.0209,
+                "jit": 0.00609,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 36.056
+              },
+              "array_loop": {
+                "gd": 0.06523,
+                "jit": 0.05266,
+                "checksum": "625500000",
+                "gd_instructions": 1557.085,
+                "jit_instructions": 1020.084
+              },
+              "dictionary_loop": {
+                "gd": 0.13301,
+                "jit": 0.10015,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2251.116
+              },
+              "vector_loop": {
+                "gd": 0.011,
+                "jit": 0.00391,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 27.072
+              },
+              "gameplay_loop": {
+                "gd": 0.03292,
+                "jit": 0.00828,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 133.182
+              },
+              "local_calls": {
+                "gd": 0.21251,
+                "jit": 0.02679,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.081,
+                "jit_instructions": 474.074
+              },
+              "object_calls": {
+                "gd": 0.08349,
+                "jit": 0.05584,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.089,
+                "jit_instructions": 1085.085
+              },
+              "callable_calls": {
+                "gd": 0.08375,
+                "jit": 0.05811,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.095,
+                "jit_instructions": 1207.088
+              }
+            },
+            "cc": {
+              "integer_loop": {
+                "gd": 0.01705,
+                "jit": 0.00019,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 5.049
+              },
+              "float_loop": {
+                "gd": 0.02214,
+                "jit": 0.00111,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 8.054
+              },
+              "array_loop": {
+                "gd": 0.06604,
+                "jit": 0.04979,
+                "checksum": "625500000",
+                "gd_instructions": 1557.086,
+                "jit_instructions": 884.082
+              },
+              "dictionary_loop": {
+                "gd": 0.13635,
+                "jit": 0.09706,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2096.116
+              },
+              "vector_loop": {
+                "gd": 0.01106,
+                "jit": 0.00057,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 5.07
+              },
+              "gameplay_loop": {
+                "gd": 0.03515,
+                "jit": 0.00502,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 88.241
+              },
+              "local_calls": {
+                "gd": 0.21238,
+                "jit": 0.02461,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.081,
+                "jit_instructions": 272.073
+              },
+              "object_calls": {
+                "gd": 0.08363,
+                "jit": 0.05513,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.089,
+                "jit_instructions": 926.084
+              },
+              "callable_calls": {
+                "gd": 0.08355,
+                "jit": 0.05795,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.095,
+                "jit_instructions": 1047.087
+              }
+            }
+          },
+          "typical": {
+            "tcc": {
+              "think_5": {
+                "gd": 0.37985,
+                "jit": 0.17127,
+                "gd_instructions": 8058.963,
+                "jit_instructions": 3290.499
+              },
+              "minigame": {
+                "gd": 2.01787,
+                "jit": 1.82227,
+                "gd_instructions": 40799.629,
+                "jit_instructions": 35939.953
+              },
+              "call_floor": {
+                "gd": 0.11386,
+                "jit": 0.09572,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 2065.081
+              },
+              "nearest_0": {
+                "gd": 0.13107,
+                "jit": 0.09802,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2131.096
+              },
+              "nearest_5": {
+                "gd": 0.28948,
+                "jit": 0.14771,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 3100.528
+              },
+              "iterate_5": {
+                "gd": 0.19415,
+                "jit": 0.13394,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2938.099
+              },
+              "distance_5": {
+                "gd": 0.24136,
+                "jit": 0.14152,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 3004.105
+              },
+              "normalize": {
+                "gd": 0.10747,
+                "jit": 0.10081,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1971.112
+              },
+              "batch_think": {
+                "gd": 0.33645,
+                "jit": 0.0831,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1349.129
+              },
+              "batch_nearest": {
+                "gd": 0.24727,
+                "jit": 0.06248,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 1210.129
+              },
+              "batch_iterate": {
+                "gd": 0.16223,
+                "jit": 0.05789,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 1072.129
+              },
+              "batch_normalize": {
+                "gd": 0.07481,
+                "jit": 0.02273,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 140.129
+              },
+              "batch_floor": {
+                "gd": 0.08184,
+                "jit": 0.00696,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 127.128
+              }
+            },
+            "cc": {
+              "think_5": {
+                "gd": 0.38099,
+                "jit": 0.14763,
+                "gd_instructions": 8058.963,
+                "jit_instructions": 2967.44
+              },
+              "minigame": {
+                "gd": 2.00913,
+                "jit": 1.76979,
+                "gd_instructions": 40799.629,
+                "jit_instructions": 35615.162
+              },
+              "call_floor": {
+                "gd": 0.1127,
+                "jit": 0.09054,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 1942.081
+              },
+              "nearest_0": {
+                "gd": 0.1311,
+                "jit": 0.09153,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2038.096
+              },
+              "nearest_5": {
+                "gd": 0.29135,
+                "jit": 0.14234,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 2837.468
+              },
+              "iterate_5": {
+                "gd": 0.20277,
+                "jit": 0.12551,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2740.099
+              },
+              "distance_5": {
+                "gd": 0.24179,
+                "jit": 0.1251,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 2788.105
+              },
+              "normalize": {
+                "gd": 0.10778,
+                "jit": 0.08833,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1903.112
+              },
+              "batch_think": {
+                "gd": 0.3409,
+                "jit": 0.05803,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1030.127
+              },
+              "batch_nearest": {
+                "gd": 0.2457,
+                "jit": 0.0559,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 948.128
+              },
+              "batch_iterate": {
+                "gd": 0.16415,
+                "jit": 0.0501,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 873.128
+              },
+              "batch_normalize": {
+                "gd": 0.07655,
+                "jit": 0.00261,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 38.128
+              },
+              "batch_floor": {
+                "gd": 0.08076,
+                "jit": 0.00056,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 2.627
+              }
+            }
+          },
+          "math": {
+            "tcc": {
+              "bench_primitives": {
+                "gd": 0.02255,
+                "jit": 0.00438,
+                "gd_instructions": 518.049,
+                "jit_instructions": 52.042
+              },
+              "bench_engine": {
+                "gd": 0.04039,
+                "jit": 0.02759,
+                "gd_instructions": 766.048,
+                "jit_instructions": 233.04
+              }
+            },
+            "cc": {
+              "bench_primitives": {
+                "gd": 0.02244,
+                "jit": 0.00043,
+                "gd_instructions": 518.049,
+                "jit_instructions": 10.04
+              },
+              "bench_engine": {
+                "gd": 0.04001,
+                "jit": 0.01578,
+                "gd_instructions": 766.048,
+                "jit_instructions": 198.039
+              }
+            }
+          }
+        },
+        "typical_tcc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896300,
+                805896301,
+                805896302,
+                805896302,
+                805896364,
+                805896366,
+                805896366
+              ],
+              "gd_samples_us": [
+                37719,
+                37852,
+                37938,
+                37985,
+                38025,
+                38102,
+                38115
+              ],
+              "gd_us": 37985,
+              "iterations": 100000,
+              "jit_instructions": [
+                329049876,
+                329049876,
+                329049878,
+                329049940,
+                329049940,
+                329049940,
+                329049965
+              ],
+              "jit_samples_us": [
+                17078,
+                17094,
+                17115,
+                17127,
+                17133,
+                17170,
+                17246
+              ],
+              "jit_us": 17127,
+              "ratio": 0.450888508621824,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962115,
+                4079962124,
+                4079962130,
+                4079962940,
+                4079962948,
+                4079962953,
+                4079963251
+              ],
+              "gd_samples_us": [
+                195826,
+                196257,
+                196611,
+                201787,
+                202162,
+                202337,
+                202415
+              ],
+              "gd_us": 201787,
+              "iterations": 100000,
+              "jit_instructions": [
+                3593995299,
+                3593995310,
+                3593995311,
+                3593995324,
+                3593996121,
+                3593996133,
+                3593996135
+              ],
+              "jit_samples_us": [
+                176140,
+                176342,
+                180460,
+                182227,
+                182241,
+                182585,
+                182604
+              ],
+              "jit_us": 182227,
+              "ratio": 0.903066104357565,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208009,
+                263208009,
+                263208009,
+                263208009,
+                263208075,
+                263208075,
+                263208085
+              ],
+              "gd_samples_us": [
+                11318,
+                11328,
+                11328,
+                11386,
+                11408,
+                11411,
+                11456
+              ],
+              "gd_us": 11386,
+              "iterations": 100000,
+              "jit_instructions": [
+                206508005,
+                206508005,
+                206508026,
+                206508071,
+                206508071,
+                206508071,
+                206508071
+              ],
+              "jit_samples_us": [
+                9546,
+                9556,
+                9566,
+                9572,
+                9596,
+                9598,
+                9716
+              ],
+              "jit_us": 9572,
+              "ratio": 0.840681538731776,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509516,
+                294509516,
+                294509516,
+                294509516,
+                294509580,
+                294509580,
+                294509580
+              ],
+              "gd_samples_us": [
+                13081,
+                13082,
+                13093,
+                13107,
+                13134,
+                13149,
+                13213
+              ],
+              "gd_us": 13107,
+              "iterations": 100000,
+              "jit_instructions": [
+                213109509,
+                213109510,
+                213109510,
+                213109574,
+                213109574,
+                213109574,
+                213109574
+              ],
+              "jit_samples_us": [
+                9786,
+                9796,
+                9800,
+                9802,
+                9803,
+                9804,
+                9820
+              ],
+              "jit_us": 9802,
+              "ratio": 0.747844663157092,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599105,
+                611599106,
+                611599107,
+                611599107,
+                611599171,
+                611599171,
+                611599171
+              ],
+              "gd_samples_us": [
+                28629,
+                28860,
+                28908,
+                28948,
+                28980,
+                29001,
+                29096
+              ],
+              "gd_us": 28948,
+              "iterations": 100000,
+              "jit_instructions": [
+                310052695,
+                310052695,
+                310052695,
+                310052757,
+                310052759,
+                310052759,
+                310052858
+              ],
+              "jit_samples_us": [
+                14694,
+                14729,
+                14770,
+                14771,
+                14808,
+                14823,
+                14875
+              ],
+              "jit_us": 14771,
+              "ratio": 0.510259776150339,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809898,
+                431809898,
+                431809898,
+                431809900,
+                431809962,
+                431809964,
+                431809976
+              ],
+              "gd_samples_us": [
+                19356,
+                19379,
+                19408,
+                19415,
+                19483,
+                19495,
+                19642
+              ],
+              "gd_us": 19415,
+              "iterations": 100000,
+              "jit_instructions": [
+                293809886,
+                293809886,
+                293809888,
+                293809950,
+                293809951,
+                293809952,
+                293809952
+              ],
+              "jit_samples_us": [
+                13358,
+                13361,
+                13392,
+                13394,
+                13399,
+                13428,
+                13464
+              ],
+              "jit_us": 13394,
+              "ratio": 0.689878959567345,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710475,
+                533710476,
+                533710476,
+                533710476,
+                533710541,
+                533710541,
+                533710548
+              ],
+              "gd_samples_us": [
+                24113,
+                24120,
+                24134,
+                24136,
+                24140,
+                24143,
+                24144
+              ],
+              "gd_us": 24136,
+              "iterations": 100000,
+              "jit_instructions": [
+                300410456,
+                300410456,
+                300410458,
+                300410521,
+                300410521,
+                300410521,
+                300410523
+              ],
+              "jit_samples_us": [
+                14127,
+                14137,
+                14144,
+                14152,
+                14162,
+                14197,
+                14211
+              ],
+              "jit_us": 14152,
+              "ratio": 0.586344050381173,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311102,
+                241311104,
+                241311104,
+                241311104,
+                241311165,
+                241311168,
+                241311168
+              ],
+              "gd_samples_us": [
+                10728,
+                10728,
+                10737,
+                10747,
+                10753,
+                10758,
+                10778
+              ],
+              "gd_us": 10747,
+              "iterations": 100000,
+              "jit_instructions": [
+                197111101,
+                197111102,
+                197111102,
+                197111166,
+                197111166,
+                197111166,
+                197111168
+              ],
+              "jit_samples_us": [
+                10043,
+                10061,
+                10065,
+                10081,
+                10099,
+                10101,
+                10124
+              ],
+              "jit_us": 10081,
+              "ratio": 0.938029217456034,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813842,
+                715813842,
+                715813843,
+                715813843,
+                715813908,
+                715813908,
+                715813915
+              ],
+              "gd_samples_us": [
+                33440,
+                33534,
+                33557,
+                33645,
+                33783,
+                33787,
+                33993
+              ],
+              "gd_us": 33645,
+              "iterations": 100000,
+              "jit_instructions": [
+                134912791,
+                134912791,
+                134912791,
+                134912854,
+                134912855,
+                134912856,
+                134912857
+              ],
+              "jit_samples_us": [
+                8231,
+                8235,
+                8309,
+                8310,
+                8330,
+                8336,
+                8377
+              ],
+              "jit_us": 8310,
+              "ratio": 0.24699063753901,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513863,
+                521513863,
+                521513863,
+                521513864,
+                521513926,
+                521513927,
+                521513928
+              ],
+              "gd_samples_us": [
+                24530,
+                24611,
+                24696,
+                24727,
+                24791,
+                24894,
+                25096
+              ],
+              "gd_us": 24727,
+              "iterations": 100000,
+              "jit_instructions": [
+                121012822,
+                121012822,
+                121012823,
+                121012886,
+                121012886,
+                121012886,
+                121012886
+              ],
+              "jit_samples_us": [
+                6123,
+                6214,
+                6245,
+                6248,
+                6263,
+                6272,
+                6336
+              ],
+              "jit_us": 6248,
+              "ratio": 0.252679257491811,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913826,
+                352913826,
+                352913826,
+                352913826,
+                352913888,
+                352913888,
+                352913888
+              ],
+              "gd_samples_us": [
+                16131,
+                16180,
+                16193,
+                16223,
+                16232,
+                16238,
+                16247
+              ],
+              "gd_us": 16223,
+              "iterations": 100000,
+              "jit_instructions": [
+                107212801,
+                107212801,
+                107212801,
+                107212863,
+                107212863,
+                107212863,
+                107212863
+              ],
+              "jit_samples_us": [
+                5769,
+                5784,
+                5787,
+                5789,
+                5802,
+                5804,
+                5806
+              ],
+              "jit_us": 5789,
+              "ratio": 0.356839055661715,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413822,
+                162413822,
+                162413824,
+                162413826,
+                162413886,
+                162413888,
+                162413888
+              ],
+              "gd_samples_us": [
+                7451,
+                7452,
+                7466,
+                7481,
+                7493,
+                7514,
+                7538
+              ],
+              "gd_us": 7481,
+              "iterations": 100000,
+              "jit_instructions": [
+                14012809,
+                14012809,
+                14012811,
+                14012873,
+                14012873,
+                14012873,
+                14012875
+              ],
+              "jit_samples_us": [
+                2266,
+                2271,
+                2273,
+                2273,
+                2296,
+                2297,
+                2315
+              ],
+              "jit_us": 2273,
+              "ratio": 0.303836385509959,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313792,
+                184313792,
+                184313792,
+                184313794,
+                184313856,
+                184313856,
+                184313858
+              ],
+              "gd_samples_us": [
+                8171,
+                8181,
+                8182,
+                8184,
+                8207,
+                8208,
+                8211
+              ],
+              "gd_us": 8184,
+              "iterations": 100000,
+              "jit_instructions": [
+                12712775,
+                12712777,
+                12712777,
+                12712839,
+                12712839,
+                12712841,
+                12712841
+              ],
+              "jit_samples_us": [
+                693,
+                694,
+                694,
+                696,
+                699,
+                701,
+                702
+              ],
+              "jit_us": 696,
+              "ratio": 0.0850439882697947,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "typical_cc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896302,
+                805896302,
+                805896302,
+                805896304,
+                805896365,
+                805896366,
+                805896366
+              ],
+              "gd_samples_us": [
+                37899,
+                37927,
+                38003,
+                38099,
+                38644,
+                38652,
+                38694
+              ],
+              "gd_us": 38099,
+              "iterations": 100000,
+              "jit_instructions": [
+                296743927,
+                296743928,
+                296743928,
+                296743990,
+                296743991,
+                296743992,
+                296743992
+              ],
+              "jit_samples_us": [
+                14727,
+                14729,
+                14745,
+                14763,
+                14790,
+                14793,
+                14827
+              ],
+              "jit_us": 14763,
+              "ratio": 0.387490485314575,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962118,
+                4079962129,
+                4079962181,
+                4079962943,
+                4079962952,
+                4079962952,
+                4079962952
+              ],
+              "gd_samples_us": [
+                196062,
+                197456,
+                198010,
+                200913,
+                202850,
+                203147,
+                203867
+              ],
+              "gd_us": 200913,
+              "iterations": 100000,
+              "jit_instructions": [
+                3561516184,
+                3561516184,
+                3561516193,
+                3561516196,
+                3561517004,
+                3561517007,
+                3561517019
+              ],
+              "jit_samples_us": [
+                175120,
+                175603,
+                176065,
+                176979,
+                182081,
+                182272,
+                183213
+              ],
+              "jit_us": 176979,
+              "ratio": 0.880873811052545,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208009,
+                263208009,
+                263208009,
+                263208011,
+                263208073,
+                263208073,
+                263208075
+              ],
+              "gd_samples_us": [
+                11220,
+                11249,
+                11258,
+                11270,
+                11271,
+                11272,
+                11305
+              ],
+              "gd_us": 11270,
+              "iterations": 100000,
+              "jit_instructions": [
+                194208005,
+                194208005,
+                194208005,
+                194208068,
+                194208069,
+                194208069,
+                194208070
+              ],
+              "jit_samples_us": [
+                9040,
+                9047,
+                9051,
+                9054,
+                9102,
+                9106,
+                9115
+              ],
+              "jit_us": 9054,
+              "ratio": 0.803371783496007,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509515,
+                294509516,
+                294509516,
+                294509516,
+                294509580,
+                294509580,
+                294509580
+              ],
+              "gd_samples_us": [
+                13023,
+                13057,
+                13069,
+                13110,
+                13110,
+                13113,
+                13137
+              ],
+              "gd_us": 13110,
+              "iterations": 100000,
+              "jit_instructions": [
+                203809508,
+                203809508,
+                203809510,
+                203809572,
+                203809572,
+                203809572,
+                203809574
+              ],
+              "jit_samples_us": [
+                9138,
+                9143,
+                9144,
+                9153,
+                9162,
+                9163,
+                9195
+              ],
+              "jit_us": 9153,
+              "ratio": 0.698169336384439,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599104,
+                611599107,
+                611599107,
+                611599107,
+                611599170,
+                611599171,
+                611599171
+              ],
+              "gd_samples_us": [
+                29042,
+                29060,
+                29106,
+                29135,
+                29295,
+                29334,
+                29454
+              ],
+              "gd_us": 29135,
+              "iterations": 100000,
+              "jit_instructions": [
+                283746748,
+                283746751,
+                283746757,
+                283746813,
+                283746813,
+                283746813,
+                283746815
+              ],
+              "jit_samples_us": [
+                14176,
+                14215,
+                14232,
+                14234,
+                14240,
+                14250,
+                14253
+              ],
+              "jit_us": 14234,
+              "ratio": 0.488553286425262,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809900,
+                431809900,
+                431809900,
+                431809900,
+                431809962,
+                431809964,
+                431809966
+              ],
+              "gd_samples_us": [
+                20200,
+                20266,
+                20266,
+                20277,
+                20290,
+                20296,
+                20312
+              ],
+              "gd_us": 20277,
+              "iterations": 100000,
+              "jit_instructions": [
+                274009884,
+                274009886,
+                274009886,
+                274009947,
+                274009950,
+                274009950,
+                274009950
+              ],
+              "jit_samples_us": [
+                12543,
+                12547,
+                12548,
+                12551,
+                12554,
+                12558,
+                12564
+              ],
+              "jit_us": 12551,
+              "ratio": 0.618977166247472,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710475,
+                533710476,
+                533710476,
+                533710476,
+                533710539,
+                533710541,
+                533710541
+              ],
+              "gd_samples_us": [
+                24049,
+                24108,
+                24137,
+                24179,
+                24181,
+                24198,
+                24199
+              ],
+              "gd_us": 24179,
+              "iterations": 100000,
+              "jit_instructions": [
+                278810451,
+                278810453,
+                278810454,
+                278810517,
+                278810517,
+                278810519,
+                278810519
+              ],
+              "jit_samples_us": [
+                12493,
+                12500,
+                12505,
+                12510,
+                12513,
+                12515,
+                12533
+              ],
+              "jit_us": 12510,
+              "ratio": 0.51739112452955,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311102,
+                241311104,
+                241311104,
+                241311104,
+                241311166,
+                241311168,
+                241311168
+              ],
+              "gd_samples_us": [
+                10761,
+                10764,
+                10774,
+                10778,
+                10803,
+                10807,
+                10818
+              ],
+              "gd_us": 10778,
+              "iterations": 100000,
+              "jit_instructions": [
+                190311098,
+                190311100,
+                190311100,
+                190311164,
+                190311164,
+                190311164,
+                190311164
+              ],
+              "jit_samples_us": [
+                8827,
+                8831,
+                8832,
+                8833,
+                8879,
+                8895,
+                8907
+              ],
+              "jit_us": 8833,
+              "ratio": 0.819539803303025,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813841,
+                715813843,
+                715813844,
+                715813844,
+                715813906,
+                715813908,
+                715813909
+              ],
+              "gd_samples_us": [
+                33728,
+                33912,
+                34052,
+                34090,
+                34094,
+                34164,
+                34175
+              ],
+              "gd_us": 34090,
+              "iterations": 100000,
+              "jit_instructions": [
+                103012679,
+                103012679,
+                103012679,
+                103012742,
+                103012743,
+                103012743,
+                103012743
+              ],
+              "jit_samples_us": [
+                5785,
+                5786,
+                5797,
+                5803,
+                5810,
+                5834,
+                5868
+              ],
+              "jit_us": 5803,
+              "ratio": 0.170225872689938,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513862,
+                521513862,
+                521513862,
+                521513864,
+                521513926,
+                521513927,
+                521513928
+              ],
+              "gd_samples_us": [
+                24538,
+                24538,
+                24549,
+                24570,
+                24597,
+                24600,
+                24633
+              ],
+              "gd_us": 24570,
+              "iterations": 100000,
+              "jit_instructions": [
+                94812712,
+                94812714,
+                94812714,
+                94812776,
+                94812778,
+                94812778,
+                94812778
+              ],
+              "jit_samples_us": [
+                5572,
+                5581,
+                5582,
+                5590,
+                5609,
+                5610,
+                5613
+              ],
+              "jit_us": 5590,
+              "ratio": 0.227513227513228,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913824,
+                352913824,
+                352913825,
+                352913826,
+                352913888,
+                352913888,
+                352913888
+              ],
+              "gd_samples_us": [
+                16395,
+                16403,
+                16413,
+                16415,
+                16440,
+                16443,
+                16457
+              ],
+              "gd_us": 16415,
+              "iterations": 100000,
+              "jit_instructions": [
+                87312691,
+                87312691,
+                87312693,
+                87312755,
+                87312755,
+                87312755,
+                87312755
+              ],
+              "jit_samples_us": [
+                4993,
+                4994,
+                4999,
+                5010,
+                5025,
+                5027,
+                5031
+              ],
+              "jit_us": 5010,
+              "ratio": 0.305208650624429,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413822,
+                162413824,
+                162413824,
+                162413824,
+                162413886,
+                162413888,
+                162413888
+              ],
+              "gd_samples_us": [
+                7634,
+                7635,
+                7651,
+                7655,
+                7661,
+                7674,
+                7675
+              ],
+              "gd_us": 7655,
+              "iterations": 100000,
+              "jit_instructions": [
+                3812691,
+                3812691,
+                3812693,
+                3812755,
+                3812755,
+                3812755,
+                3812757
+              ],
+              "jit_samples_us": [
+                260,
+                260,
+                260,
+                261,
+                261,
+                262,
+                262
+              ],
+              "jit_us": 261,
+              "ratio": 0.0340953625081646,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313792,
+                184313792,
+                184313792,
+                184313792,
+                184313856,
+                184313856,
+                184313856
+              ],
+              "gd_samples_us": [
+                8064,
+                8073,
+                8076,
+                8076,
+                8078,
+                8080,
+                8228
+              ],
+              "gd_us": 8076,
+              "iterations": 100000,
+              "jit_instructions": [
+                262606,
+                262606,
+                262608,
+                262670,
+                262670,
+                262670,
+                262670
+              ],
+              "jit_samples_us": [
+                56,
+                56,
+                56,
+                56,
+                56,
+                57,
+                58
+              ],
+              "jit_us": 56,
+              "ratio": 0.00693412580485389,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "generated_c_sha256": {
+          "call": "04254d50a5f206534a79d8496d7ef8ec222a1a04bbbb0013e7c350e43543b4c6",
+          "typical": "4cd96d7f64c6339c1e557980047ff2d1d8fe69954294c778a74f45cbe9475b18"
+        }
+      },
+      {
+        "run": 3,
+        "suites": {
+          "call": {
+            "tcc": {
+              "integer_loop": {
+                "gd": 0.01706,
+                "jit": 0.00167,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 35.05
+              },
+              "float_loop": {
+                "gd": 0.02091,
+                "jit": 0.00612,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 36.056
+              },
+              "array_loop": {
+                "gd": 0.06578,
+                "jit": 0.05344,
+                "checksum": "625500000",
+                "gd_instructions": 1557.085,
+                "jit_instructions": 1020.084
+              },
+              "dictionary_loop": {
+                "gd": 0.13702,
+                "jit": 0.10122,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2251.116
+              },
+              "vector_loop": {
+                "gd": 0.01098,
+                "jit": 0.00391,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 27.072
+              },
+              "gameplay_loop": {
+                "gd": 0.03466,
+                "jit": 0.00796,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 133.182
+              },
+              "local_calls": {
+                "gd": 0.21159,
+                "jit": 0.02687,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.081,
+                "jit_instructions": 474.074
+              },
+              "object_calls": {
+                "gd": 0.08449,
+                "jit": 0.05566,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.089,
+                "jit_instructions": 1085.085
+              },
+              "callable_calls": {
+                "gd": 0.08409,
+                "jit": 0.05865,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.095,
+                "jit_instructions": 1207.088
+              }
+            },
+            "cc": {
+              "integer_loop": {
+                "gd": 0.01704,
+                "jit": 0.00019,
+                "checksum": "12748816",
+                "gd_instructions": 400.057,
+                "jit_instructions": 5.049
+              },
+              "float_loop": {
+                "gd": 0.02093,
+                "jit": 0.00112,
+                "checksum": "316.0",
+                "gd_instructions": 484.062,
+                "jit_instructions": 8.054
+              },
+              "array_loop": {
+                "gd": 0.06555,
+                "jit": 0.04841,
+                "checksum": "625500000",
+                "gd_instructions": 1557.086,
+                "jit_instructions": 884.082
+              },
+              "dictionary_loop": {
+                "gd": 0.13694,
+                "jit": 0.09576,
+                "checksum": "-14990150000",
+                "gd_instructions": 3004.101,
+                "jit_instructions": 2096.113
+              },
+              "vector_loop": {
+                "gd": 0.01106,
+                "jit": 0.00056,
+                "checksum": "75003.0",
+                "gd_instructions": 255.081,
+                "jit_instructions": 5.07
+              },
+              "gameplay_loop": {
+                "gd": 0.04123,
+                "jit": 0.00491,
+                "checksum": "136821878.0",
+                "gd_instructions": 736.994,
+                "jit_instructions": 88.241
+              },
+              "local_calls": {
+                "gd": 0.21289,
+                "jit": 0.02501,
+                "checksum": "79998250000",
+                "gd_instructions": 4353.083,
+                "jit_instructions": 272.073
+              },
+              "object_calls": {
+                "gd": 0.08326,
+                "jit": 0.05617,
+                "checksum": "17499650000",
+                "gd_instructions": 1800.089,
+                "jit_instructions": 926.084
+              },
+              "callable_calls": {
+                "gd": 0.0835,
+                "jit": 0.0584,
+                "checksum": "17499650000",
+                "gd_instructions": 1839.095,
+                "jit_instructions": 1047.087
+              }
+            }
+          },
+          "typical": {
+            "tcc": {
+              "think_5": {
+                "gd": 0.38483,
+                "jit": 0.18167,
+                "gd_instructions": 8058.963,
+                "jit_instructions": 3290.499
+              },
+              "minigame": {
+                "gd": 2.04307,
+                "jit": 1.83655,
+                "gd_instructions": 40799.629,
+                "jit_instructions": 35939.954
+              },
+              "call_floor": {
+                "gd": 0.11399,
+                "jit": 0.09911,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 2065.081
+              },
+              "nearest_0": {
+                "gd": 0.13332,
+                "jit": 0.10308,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2131.096
+              },
+              "nearest_5": {
+                "gd": 0.29486,
+                "jit": 0.15515,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 3100.528
+              },
+              "iterate_5": {
+                "gd": 0.19889,
+                "jit": 0.13874,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2938.1
+              },
+              "distance_5": {
+                "gd": 0.24453,
+                "jit": 0.14838,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 3004.105
+              },
+              "normalize": {
+                "gd": 0.11166,
+                "jit": 0.10402,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1971.112
+              },
+              "batch_think": {
+                "gd": 0.34383,
+                "jit": 0.0828,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1349.129
+              },
+              "batch_nearest": {
+                "gd": 0.25154,
+                "jit": 0.06371,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 1210.129
+              },
+              "batch_iterate": {
+                "gd": 0.16452,
+                "jit": 0.05795,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 1072.129
+              },
+              "batch_normalize": {
+                "gd": 0.07873,
+                "jit": 0.02296,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 140.129
+              },
+              "batch_floor": {
+                "gd": 0.08121,
+                "jit": 0.00697,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 127.128
+              }
+            },
+            "cc": {
+              "think_5": {
+                "gd": 0.37825,
+                "jit": 0.1451,
+                "gd_instructions": 8058.963,
+                "jit_instructions": 2967.44
+              },
+              "minigame": {
+                "gd": 2.0053,
+                "jit": 1.75935,
+                "gd_instructions": 40799.629,
+                "jit_instructions": 35615.162
+              },
+              "call_floor": {
+                "gd": 0.11363,
+                "jit": 0.09071,
+                "gd_instructions": 2632.08,
+                "jit_instructions": 1942.081
+              },
+              "nearest_0": {
+                "gd": 0.13177,
+                "jit": 0.09502,
+                "gd_instructions": 2945.095,
+                "jit_instructions": 2038.096
+              },
+              "nearest_5": {
+                "gd": 0.29466,
+                "jit": 0.13968,
+                "gd_instructions": 6115.991,
+                "jit_instructions": 2837.468
+              },
+              "iterate_5": {
+                "gd": 0.2022,
+                "jit": 0.12788,
+                "gd_instructions": 4318.099,
+                "jit_instructions": 2740.099
+              },
+              "distance_5": {
+                "gd": 0.2462,
+                "jit": 0.12888,
+                "gd_instructions": 5337.105,
+                "jit_instructions": 2788.105
+              },
+              "normalize": {
+                "gd": 0.1069,
+                "jit": 0.08874,
+                "gd_instructions": 2413.111,
+                "jit_instructions": 1903.112
+              },
+              "batch_think": {
+                "gd": 0.33836,
+                "jit": 0.05821,
+                "gd_instructions": 7158.138,
+                "jit_instructions": 1030.127
+              },
+              "batch_nearest": {
+                "gd": 0.25112,
+                "jit": 0.05591,
+                "gd_instructions": 5215.139,
+                "jit_instructions": 948.128
+              },
+              "batch_iterate": {
+                "gd": 0.16719,
+                "jit": 0.05002,
+                "gd_instructions": 3529.138,
+                "jit_instructions": 873.128
+              },
+              "batch_normalize": {
+                "gd": 0.07531,
+                "jit": 0.00261,
+                "gd_instructions": 1624.138,
+                "jit_instructions": 38.128
+              },
+              "batch_floor": {
+                "gd": 0.07969,
+                "jit": 0.00057,
+                "gd_instructions": 1843.138,
+                "jit_instructions": 2.627
+              }
+            }
+          },
+          "math": {
+            "tcc": {
+              "bench_primitives": {
+                "gd": 0.02257,
+                "jit": 0.00442,
+                "gd_instructions": 518.049,
+                "jit_instructions": 52.042
+              },
+              "bench_engine": {
+                "gd": 0.04002,
+                "jit": 0.02759,
+                "gd_instructions": 766.048,
+                "jit_instructions": 233.04
+              }
+            },
+            "cc": {
+              "bench_primitives": {
+                "gd": 0.02637,
+                "jit": 0.00041,
+                "gd_instructions": 518.049,
+                "jit_instructions": 10.04
+              },
+              "bench_engine": {
+                "gd": 0.03992,
+                "jit": 0.01587,
+                "gd_instructions": 766.048,
+                "jit_instructions": 198.039
+              }
+            }
+          }
+        },
+        "typical_tcc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896302,
+                805896303,
+                805896304,
+                805896319,
+                805896366,
+                805896366,
+                805896368
+              ],
+              "gd_samples_us": [
+                38217,
+                38253,
+                38447,
+                38483,
+                38487,
+                38586,
+                38627
+              ],
+              "gd_us": 38483,
+              "iterations": 100000,
+              "jit_instructions": [
+                329049875,
+                329049878,
+                329049878,
+                329049941,
+                329049942,
+                329049942,
+                329049942
+              ],
+              "jit_samples_us": [
+                17931,
+                18041,
+                18106,
+                18167,
+                18250,
+                18251,
+                18261
+              ],
+              "jit_us": 18167,
+              "ratio": 0.472078580152275,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962130,
+                4079962139,
+                4079962181,
+                4079962936,
+                4079962954,
+                4079962955,
+                4079964487
+              ],
+              "gd_samples_us": [
+                195468,
+                204147,
+                204166,
+                204307,
+                204959,
+                205419,
+                206088
+              ],
+              "gd_us": 204307,
+              "iterations": 100000,
+              "jit_instructions": [
+                3593995299,
+                3593995312,
+                3593995371,
+                3593995376,
+                3593996135,
+                3593996137,
+                3593996139
+              ],
+              "jit_samples_us": [
+                174979,
+                182072,
+                183350,
+                183655,
+                184076,
+                184519,
+                184797
+              ],
+              "jit_us": 183655,
+              "ratio": 0.898916826148884,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208009,
+                263208009,
+                263208009,
+                263208011,
+                263208073,
+                263208073,
+                263208075
+              ],
+              "gd_samples_us": [
+                11346,
+                11364,
+                11389,
+                11399,
+                11408,
+                11408,
+                11440
+              ],
+              "gd_us": 11399,
+              "iterations": 100000,
+              "jit_instructions": [
+                206508007,
+                206508007,
+                206508007,
+                206508071,
+                206508071,
+                206508071,
+                206508071
+              ],
+              "jit_samples_us": [
+                9869,
+                9875,
+                9904,
+                9911,
+                9931,
+                9944,
+                9964
+              ],
+              "jit_us": 9911,
+              "ratio": 0.869462233529257,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509516,
+                294509516,
+                294509518,
+                294509518,
+                294509580,
+                294509580,
+                294509589
+              ],
+              "gd_samples_us": [
+                13291,
+                13325,
+                13331,
+                13332,
+                13381,
+                13395,
+                13456
+              ],
+              "gd_us": 13332,
+              "iterations": 100000,
+              "jit_instructions": [
+                213109510,
+                213109511,
+                213109512,
+                213109574,
+                213109574,
+                213109574,
+                213109574
+              ],
+              "jit_samples_us": [
+                10217,
+                10234,
+                10299,
+                10308,
+                10358,
+                10375,
+                10418
+              ],
+              "jit_us": 10308,
+              "ratio": 0.773177317731773,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599107,
+                611599107,
+                611599109,
+                611599114,
+                611599173,
+                611599173,
+                611599173
+              ],
+              "gd_samples_us": [
+                29430,
+                29450,
+                29484,
+                29486,
+                29520,
+                29531,
+                29709
+              ],
+              "gd_us": 29486,
+              "iterations": 100000,
+              "jit_instructions": [
+                310052695,
+                310052695,
+                310052697,
+                310052759,
+                310052761,
+                310052761,
+                310052761
+              ],
+              "jit_samples_us": [
+                15408,
+                15467,
+                15507,
+                15515,
+                15524,
+                15533,
+                15607
+              ],
+              "jit_us": 15515,
+              "ratio": 0.526181916841891,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809899,
+                431809900,
+                431809901,
+                431809910,
+                431809964,
+                431809964,
+                431809964
+              ],
+              "gd_samples_us": [
+                19815,
+                19859,
+                19889,
+                19889,
+                19895,
+                19958,
+                19979
+              ],
+              "gd_us": 19889,
+              "iterations": 100000,
+              "jit_instructions": [
+                293809888,
+                293809888,
+                293809888,
+                293809952,
+                293809952,
+                293809952,
+                293809952
+              ],
+              "jit_samples_us": [
+                13771,
+                13828,
+                13831,
+                13874,
+                13883,
+                13912,
+                13960
+              ],
+              "jit_us": 13874,
+              "ratio": 0.697571521946805,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710475,
+                533710476,
+                533710476,
+                533710478,
+                533710541,
+                533710543,
+                533710543
+              ],
+              "gd_samples_us": [
+                24409,
+                24432,
+                24446,
+                24453,
+                24515,
+                24584,
+                24623
+              ],
+              "gd_us": 24453,
+              "iterations": 100000,
+              "jit_instructions": [
+                300410458,
+                300410458,
+                300410458,
+                300410521,
+                300410523,
+                300410523,
+                300410523
+              ],
+              "jit_samples_us": [
+                14760,
+                14809,
+                14826,
+                14838,
+                14868,
+                14901,
+                15186
+              ],
+              "jit_us": 14838,
+              "ratio": 0.60679671205987,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311104,
+                241311104,
+                241311104,
+                241311106,
+                241311168,
+                241311168,
+                241311170
+              ],
+              "gd_samples_us": [
+                11141,
+                11161,
+                11163,
+                11166,
+                11169,
+                11171,
+                11174
+              ],
+              "gd_us": 11166,
+              "iterations": 100000,
+              "jit_instructions": [
+                197111102,
+                197111102,
+                197111102,
+                197111166,
+                197111168,
+                197111168,
+                197111168
+              ],
+              "jit_samples_us": [
+                10387,
+                10394,
+                10401,
+                10402,
+                10415,
+                10435,
+                10443
+              ],
+              "jit_us": 10402,
+              "ratio": 0.931578004656994,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813844,
+                715813844,
+                715813845,
+                715813846,
+                715813910,
+                715813910,
+                715813912
+              ],
+              "gd_samples_us": [
+                34306,
+                34321,
+                34348,
+                34383,
+                34514,
+                34526,
+                35054
+              ],
+              "gd_us": 34383,
+              "iterations": 100000,
+              "jit_instructions": [
+                134912791,
+                134912791,
+                134912793,
+                134912853,
+                134912855,
+                134912855,
+                134912855
+              ],
+              "jit_samples_us": [
+                8179,
+                8208,
+                8220,
+                8280,
+                8283,
+                8298,
+                8340
+              ],
+              "jit_us": 8280,
+              "ratio": 0.240816682662944,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513864,
+                521513864,
+                521513864,
+                521513864,
+                521513927,
+                521513928,
+                521514078
+              ],
+              "gd_samples_us": [
+                25030,
+                25045,
+                25154,
+                25154,
+                25158,
+                25251,
+                25292
+              ],
+              "gd_us": 25154,
+              "iterations": 100000,
+              "jit_instructions": [
+                121012822,
+                121012824,
+                121012824,
+                121012886,
+                121012886,
+                121012886,
+                121012887
+              ],
+              "jit_samples_us": [
+                6318,
+                6355,
+                6365,
+                6371,
+                6372,
+                6393,
+                6405
+              ],
+              "jit_us": 6371,
+              "ratio": 0.253279796453844,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913824,
+                352913824,
+                352913825,
+                352913826,
+                352913888,
+                352913889,
+                352913889
+              ],
+              "gd_samples_us": [
+                15663,
+                15834,
+                16016,
+                16452,
+                16547,
+                16582,
+                16609
+              ],
+              "gd_us": 16452,
+              "iterations": 100000,
+              "jit_instructions": [
+                107212799,
+                107212799,
+                107212801,
+                107212865,
+                107212865,
+                107212865,
+                107212865
+              ],
+              "jit_samples_us": [
+                5613,
+                5688,
+                5782,
+                5795,
+                5796,
+                5799,
+                5807
+              ],
+              "jit_us": 5795,
+              "ratio": 0.352236810114272,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413824,
+                162413824,
+                162413824,
+                162413824,
+                162413886,
+                162413888,
+                162413888
+              ],
+              "gd_samples_us": [
+                7844,
+                7856,
+                7859,
+                7873,
+                7896,
+                7901,
+                7921
+              ],
+              "gd_us": 7873,
+              "iterations": 100000,
+              "jit_instructions": [
+                14012809,
+                14012809,
+                14012811,
+                14012872,
+                14012873,
+                14012873,
+                14012875
+              ],
+              "jit_samples_us": [
+                2271,
+                2278,
+                2289,
+                2296,
+                2297,
+                2305,
+                2312
+              ],
+              "jit_us": 2296,
+              "ratio": 0.291629620221009,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313791,
+                184313792,
+                184313792,
+                184313794,
+                184313855,
+                184313856,
+                184313856
+              ],
+              "gd_samples_us": [
+                8099,
+                8112,
+                8120,
+                8121,
+                8123,
+                8140,
+                8142
+              ],
+              "gd_us": 8121,
+              "iterations": 100000,
+              "jit_instructions": [
+                12712775,
+                12712777,
+                12712777,
+                12712839,
+                12712840,
+                12712841,
+                12712841
+              ],
+              "jit_samples_us": [
+                695,
+                696,
+                696,
+                697,
+                697,
+                699,
+                704
+              ],
+              "jit_us": 697,
+              "ratio": 0.0858268686122399,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "typical_cc": {
+          "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+          "delta": 0.0166666666666667,
+          "fixture_sha256": "c62dcf3d6eac8eab0dc202697af1ec1709ae37fb4d04d516ea53f925275d89ac",
+          "godot": "4.6.3-stable (official)",
+          "results": [
+            {
+              "checksum": "Vector2(-1781.7202, -3274.0442)",
+              "gd_instructions": [
+                805896300,
+                805896302,
+                805896302,
+                805896302,
+                805896366,
+                805896366,
+                805896366
+              ],
+              "gd_samples_us": [
+                37454,
+                37738,
+                37778,
+                37825,
+                37844,
+                37882,
+                37913
+              ],
+              "gd_us": 37825,
+              "iterations": 100000,
+              "jit_instructions": [
+                296743926,
+                296743926,
+                296743928,
+                296743989,
+                296743990,
+                296743992,
+                296743992
+              ],
+              "jit_samples_us": [
+                14449,
+                14457,
+                14490,
+                14510,
+                14515,
+                14522,
+                14530
+              ],
+              "jit_us": 14510,
+              "ratio": 0.383608724388632,
+              "workload": "think_5"
+            },
+            {
+              "checksum": "[Vector2(447.1748, 133.99196), [Vector2(196.74951, 335.96866), Vector2(231.04163, 445.87936), Vector2(161.7623, 21.957916), Vector2(190.73367, 63.452427), Vector2(316.8829, 169.56648)], [Vector2(302.72244, 203.92389), Vector2(369.2492, 193.11166), Vector2(404.43738, 285.67633), Vector2(297.59744, 361.95953), Vector2(169.33316, 260.08734)], 1500, 117, 14415, 5345886078015583549]",
+              "gd_instructions": [
+                4079962119,
+                4079962122,
+                4079962134,
+                4079962944,
+                4079962948,
+                4079962948,
+                4079962974
+              ],
+              "gd_samples_us": [
+                198338,
+                199903,
+                200363,
+                200530,
+                200855,
+                201015,
+                202185
+              ],
+              "gd_us": 200530,
+              "iterations": 100000,
+              "jit_instructions": [
+                3561516179,
+                3561516181,
+                3561516182,
+                3561516185,
+                3561517005,
+                3561517006,
+                3561517032
+              ],
+              "jit_samples_us": [
+                175208,
+                175367,
+                175644,
+                175935,
+                176028,
+                176055,
+                176896
+              ],
+              "jit_us": 175935,
+              "ratio": 0.877350022440533,
+              "workload": "minigame"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                263208009,
+                263208011,
+                263208011,
+                263208011,
+                263208072,
+                263208073,
+                263208073
+              ],
+              "gd_samples_us": [
+                11331,
+                11333,
+                11355,
+                11363,
+                11366,
+                11421,
+                11480
+              ],
+              "gd_us": 11363,
+              "iterations": 100000,
+              "jit_instructions": [
+                194208005,
+                194208005,
+                194208005,
+                194208069,
+                194208069,
+                194208069,
+                194208069
+              ],
+              "jit_samples_us": [
+                9047,
+                9065,
+                9066,
+                9071,
+                9089,
+                9108,
+                9171
+              ],
+              "jit_us": 9071,
+              "ratio": 0.798292704391446,
+              "workload": "call_floor"
+            },
+            {
+              "checksum": "Vector2(25504736, 25564636)",
+              "gd_instructions": [
+                294509516,
+                294509516,
+                294509516,
+                294509516,
+                294509580,
+                294509580,
+                294509582
+              ],
+              "gd_samples_us": [
+                13084,
+                13092,
+                13158,
+                13177,
+                13178,
+                13211,
+                13238
+              ],
+              "gd_us": 13177,
+              "iterations": 100000,
+              "jit_instructions": [
+                203809508,
+                203809508,
+                203809510,
+                203809571,
+                203809572,
+                203809573,
+                203809574
+              ],
+              "jit_samples_us": [
+                9470,
+                9480,
+                9492,
+                9502,
+                9508,
+                9513,
+                9569
+              ],
+              "jit_us": 9502,
+              "ratio": 0.721104955604462,
+              "workload": "nearest_0"
+            },
+            {
+              "checksum": "Vector2(25556900, 25110740)",
+              "gd_instructions": [
+                611599107,
+                611599107,
+                611599107,
+                611599107,
+                611599173,
+                611599173,
+                611599173
+              ],
+              "gd_samples_us": [
+                29273,
+                29462,
+                29463,
+                29466,
+                29472,
+                29478,
+                29784
+              ],
+              "gd_us": 29466,
+              "iterations": 100000,
+              "jit_instructions": [
+                283746749,
+                283746749,
+                283746749,
+                283746812,
+                283746813,
+                283746813,
+                283746813
+              ],
+              "jit_samples_us": [
+                13939,
+                13943,
+                13949,
+                13968,
+                13972,
+                13975,
+                14026
+              ],
+              "jit_us": 13968,
+              "ratio": 0.474037874160049,
+              "workload": "nearest_5"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                431809899,
+                431809900,
+                431809900,
+                431809900,
+                431809964,
+                431809964,
+                431809964
+              ],
+              "gd_samples_us": [
+                20089,
+                20176,
+                20185,
+                20220,
+                20269,
+                20269,
+                20280
+              ],
+              "gd_us": 20220,
+              "iterations": 100000,
+              "jit_instructions": [
+                274009886,
+                274009886,
+                274009886,
+                274009950,
+                274009950,
+                274009950,
+                274009950
+              ],
+              "jit_samples_us": [
+                12700,
+                12712,
+                12767,
+                12788,
+                12789,
+                12791,
+                12816
+              ],
+              "jit_us": 12788,
+              "ratio": 0.6324431256182,
+              "workload": "iterate_5"
+            },
+            {
+              "checksum": "69350397280.0",
+              "gd_instructions": [
+                533710476,
+                533710476,
+                533710478,
+                533710478,
+                533710543,
+                533710543,
+                533710543
+              ],
+              "gd_samples_us": [
+                24417,
+                24448,
+                24472,
+                24620,
+                24625,
+                24653,
+                24688
+              ],
+              "gd_us": 24620,
+              "iterations": 100000,
+              "jit_instructions": [
+                278810452,
+                278810454,
+                278810455,
+                278810517,
+                278810519,
+                278810519,
+                278810519
+              ],
+              "jit_samples_us": [
+                12745,
+                12866,
+                12881,
+                12888,
+                12899,
+                12916,
+                13090
+              ],
+              "jit_us": 12888,
+              "ratio": 0.523476848090983,
+              "workload": "distance_5"
+            },
+            {
+              "checksum": "Vector2(-50388.76, -58094.566)",
+              "gd_instructions": [
+                241311102,
+                241311102,
+                241311104,
+                241311104,
+                241311166,
+                241311168,
+                241311168
+              ],
+              "gd_samples_us": [
+                10668,
+                10678,
+                10680,
+                10690,
+                10696,
+                10704,
+                10704
+              ],
+              "gd_us": 10690,
+              "iterations": 100000,
+              "jit_instructions": [
+                190311099,
+                190311099,
+                190311100,
+                190311164,
+                190311164,
+                190311164,
+                190311164
+              ],
+              "jit_samples_us": [
+                8849,
+                8853,
+                8874,
+                8874,
+                8877,
+                8893,
+                8900
+              ],
+              "jit_us": 8874,
+              "ratio": 0.830121608980355,
+              "workload": "normalize"
+            },
+            {
+              "checksum": "Vector2(100000, 0)",
+              "gd_instructions": [
+                715813842,
+                715813842,
+                715813843,
+                715813844,
+                715813906,
+                715813908,
+                715813910
+              ],
+              "gd_samples_us": [
+                33745,
+                33768,
+                33816,
+                33836,
+                33868,
+                33894,
+                33967
+              ],
+              "gd_us": 33836,
+              "iterations": 100000,
+              "jit_instructions": [
+                103012679,
+                103012679,
+                103012679,
+                103012740,
+                103012741,
+                103012743,
+                103012743
+              ],
+              "jit_samples_us": [
+                5781,
+                5783,
+                5794,
+                5821,
+                5821,
+                5823,
+                5860
+              ],
+              "jit_us": 5821,
+              "ratio": 0.172035701619577,
+              "workload": "batch_think"
+            },
+            {
+              "checksum": "Vector2(40000000, 24000000)",
+              "gd_instructions": [
+                521513863,
+                521513864,
+                521513864,
+                521513864,
+                521513926,
+                521513928,
+                521513928
+              ],
+              "gd_samples_us": [
+                25018,
+                25034,
+                25066,
+                25112,
+                25129,
+                25149,
+                25161
+              ],
+              "gd_us": 25112,
+              "iterations": 100000,
+              "jit_instructions": [
+                94812712,
+                94812714,
+                94812714,
+                94812776,
+                94812778,
+                94812778,
+                94812778
+              ],
+              "jit_samples_us": [
+                5584,
+                5585,
+                5586,
+                5591,
+                5607,
+                5607,
+                5610
+              ],
+              "jit_us": 5591,
+              "ratio": 0.222642561325263,
+              "workload": "batch_nearest"
+            },
+            {
+              "checksum": "Vector2(5000000, 43043928)",
+              "gd_instructions": [
+                352913825,
+                352913826,
+                352913826,
+                352913826,
+                352913888,
+                352913890,
+                352913890
+              ],
+              "gd_samples_us": [
+                16627,
+                16663,
+                16672,
+                16719,
+                16740,
+                16822,
+                16894
+              ],
+              "gd_us": 16719,
+              "iterations": 100000,
+              "jit_instructions": [
+                87312691,
+                87312691,
+                87312691,
+                87312755,
+                87312755,
+                87312755,
+                87312755
+              ],
+              "jit_samples_us": [
+                4991,
+                4992,
+                4993,
+                5002,
+                5010,
+                5022,
+                5030
+              ],
+              "jit_us": 5002,
+              "ratio": 0.299180573000778,
+              "workload": "batch_iterate"
+            },
+            {
+              "checksum": "Vector2(-79988.45, -60055.81)",
+              "gd_instructions": [
+                162413822,
+                162413822,
+                162413822,
+                162413824,
+                162413886,
+                162413888,
+                162413888
+              ],
+              "gd_samples_us": [
+                7512,
+                7518,
+                7521,
+                7531,
+                7533,
+                7548,
+                7562
+              ],
+              "gd_us": 7531,
+              "iterations": 100000,
+              "jit_instructions": [
+                3812691,
+                3812691,
+                3812693,
+                3812755,
+                3812755,
+                3812757,
+                3812757
+              ],
+              "jit_samples_us": [
+                260,
+                260,
+                261,
+                261,
+                262,
+                262,
+                263
+              ],
+              "jit_us": 261,
+              "ratio": 0.0346567520913557,
+              "workload": "batch_normalize"
+            },
+            {
+              "checksum": "Vector2(32000000, 24000000)",
+              "gd_instructions": [
+                184313791,
+                184313792,
+                184313792,
+                184313792,
+                184313856,
+                184313856,
+                184313856
+              ],
+              "gd_samples_us": [
+                7945,
+                7948,
+                7954,
+                7969,
+                7995,
+                8019,
+                8029
+              ],
+              "gd_us": 7969,
+              "iterations": 100000,
+              "jit_instructions": [
+                262606,
+                262606,
+                262606,
+                262670,
+                262670,
+                262670,
+                262670
+              ],
+              "jit_samples_us": [
+                56,
+                56,
+                56,
+                57,
+                57,
+                57,
+                57
+              ],
+              "jit_us": 57,
+              "ratio": 0.00715271677751286,
+              "workload": "batch_floor"
+            }
+          ],
+          "seed": 1234567
+        },
+        "generated_c_sha256": {
+          "call": "04254d50a5f206534a79d8496d7ef8ec222a1a04bbbb0013e7c350e43543b4c6",
+          "typical": "4cd96d7f64c6339c1e557980047ff2d1d8fe69954294c778a74f45cbe9475b18"
+        }
+      }
+    ],
+    "callable_adapter_instructions_per_op": {
+      "default": 1207.009,
+      "ptrcall": 1698.009,
+      "gd": 1839.01,
+      "iterations": 1000000
+    },
+    "demo_compat": {
+      "checkout": "0db80ca5fd22b9a40e05b9bc1e00af867fb7c712",
+      "projects": 118,
+      "frames": 2,
+      "jobs": 4,
+      "timeout_seconds": 30,
+      "matrix": "build/baseline-demo-complete/20260912-080343-matrix",
+      "existing_differences": [
+        "3d/rigidbody_character:run",
+        "misc/hdr_output:run"
+      ],
+      "comparison_to_original": "Identical diagnostics for both differences, using an isolated build of the original host/compiler revisions.",
+      "stable_binary_recheck": {
+        "project": "3d/occlusion_culling_mesh_lod",
+        "result": "GDScript and UnsafeGDScript import and run passed with zero diagnostics",
+        "report": "build/baseline-demo-import-recheck/20260912-081549-matrix"
+      }
+    },
+    "ctest": {
+      "release_passed": 32,
+      "benchmark_gate_enabled": true,
+      "system_compiler_passed": 30,
+      "system_compiler_excluded": [
+        "godot_jit_debugger_remote",
+        "godot_jit_typical_gate"
+      ]
+    }
+  }
 }

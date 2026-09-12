@@ -18,6 +18,7 @@
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <cstdlib>
 
 extern "C" GJReal gj_sqrt_real(GJReal value) { return godot::Math::sqrt(value); }
 
@@ -45,6 +46,25 @@ GJInt array_size(void *array) {
     GJInt length;
     size(array, nullptr, &length, 0);
     return length;
+}
+void *builtin_payload(GJVariant *value, int type) {
+    using Getter = decltype(godot::gdextension_interface::variant_get_ptr_internal_getter(GDEXTENSION_VARIANT_TYPE_BOOL));
+    static const auto getters = [] {
+        std::array<Getter, V::VARIANT_MAX> result{};
+        for (int i = 1; i < V::VARIANT_MAX; ++i)
+            result[i] = godot::gdextension_interface::variant_get_ptr_internal_getter(GDExtensionVariantType(i));
+        return result;
+    }();
+    return type <= 0 ? value : getters[type](value);
+}
+void initialize_builtin_result(GJVariant &result, int type) {
+    if (type <= 0) return;
+    if (gj_trivial(type)) result.type = type;
+    else {
+        GDExtensionCallError error{};
+        godot::gdextension_interface::variant_construct(GDExtensionVariantType(type), &result, nullptr, 0, &error);
+        if (error.error != GDEXTENSION_CALL_OK) throw std::runtime_error("Cannot initialize builtin result");
+    }
 }
 
 static uint32_t method_compatibility_hash(const godot::MethodInfo &method) {
@@ -261,14 +281,14 @@ extern "C" int gj_array_next(GJContext *ctx, GJVariant *item, GJVariant *array, 
         GJVariant length{}, position{}, test{};
         gj_int(&position, index);
         const GJVariant *comparison[] = {&position, &length};
-        bool ok = gj_op(ctx, GJ_ARRAY_SIZE, &length, array, "size", -1, nullptr, 0) &&
-            gj_op(ctx, GJ_EVALUATE, &test, nullptr, nullptr, V::OP_LESS, comparison, 2);
+        bool ok = gj_op(ctx, GJ_ARRAY_SIZE, &length, array, -1, -1, nullptr, 0) &&
+            gj_op(ctx, GJ_EVALUATE, &test, nullptr, -1, V::OP_LESS, comparison, 2);
         const bool more = ok && gj_boolean(&test);
         gj_clear(&length);
         gj_clear(&test);
         if (more) {
             const GJVariant *args[] = {&position};
-            ok = gj_op(ctx, GJ_GET, item, array, nullptr, -1, args, 1);
+            ok = gj_op(ctx, GJ_GET, item, array, -1, -1, args, 1);
         }
         return !ok ? -1 : more ? 1 : 0;
     } catch (const std::exception &e) {
@@ -279,11 +299,63 @@ extern "C" int gj_array_next(GJContext *ctx, GJVariant *item, GJVariant *array, 
         return -1;
     }
 }
+extern "C" int gj_array_next_vector(GJContext *ctx, GJReal *item, GJVariant *array, GJInt index, int type) {
+    if (ctx->failed) return -1;
+    try {
+        void *storage = array_storage(array);
+        const GJInt length = array_size(storage);
+        if (index >= length) return 0;
+        if (index < 0) index += length;
+        if (index < 0) throw std::runtime_error("Invalid Array index");
+        const auto *element = reinterpret_cast<const GJVariant *>(godot::gdextension_interface::array_operator_index_const(storage, index));
+        const int width = type == V::VECTOR2 ? 2 : type == V::VECTOR3 ? 3 : 4;
+        if (int(element->type) == type) {
+            for (int j = 0; j < width; ++j) item[j] = element->data.real[j];
+        } else {
+            if (!V::can_convert_strict(V::Type(element->type), V::Type(type)))
+                throw std::runtime_error("Invalid typed Array element");
+            const V *args[] = {reinterpret_cast<const V *>(element)};
+            V converted = construct(type, {args, 1});
+            const auto *result = reinterpret_cast<const GJVariant *>(&converted);
+            for (int j = 0; j < width; ++j) item[j] = result->data.real[j];
+        }
+        return 1;
+    } catch (const std::exception &error) {
+        gj_fail(ctx, error.what());
+        return -1;
+    } catch (...) {
+        gj_fail(ctx, "Native typed Array iteration failed");
+        return -1;
+    }
+}
 extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *self,
-    const char *name, int detail, const GJVariant *const *args, int count) {
+    int name_id, int detail, const GJVariant *const *args, int count) {
     if (ctx->failed) return 0;
     try {
         if (count < 0) throw std::runtime_error("Invalid native operation argument count");
+        const godot::NativeProgram::Name *cached = nullptr;
+        if (name_id >= 0) {
+            if (!ctx->runtime) throw std::runtime_error("Named operation requires a module runtime");
+            const auto &names = static_cast<godot::NativeState *>(ctx->runtime)->program->names;
+            if (size_t(name_id) >= names.size()) throw std::runtime_error("Invalid native name id");
+            cached = &names[name_id];
+        }
+        const char *name = cached ? cached->text : nullptr;
+        if (operation == GJ_EVALUATE && detail >= 0 && detail < 25 && detail != 9 && detail != 12 && count >= 1 && count <= 2 &&
+            args[0]->type < V::VARIANT_MAX && (count == 1 || args[1]->type < V::VARIANT_MAX)) {
+            static const auto *operators = godot::native_operators();
+            const int left = args[0]->type, right = count == 1 ? V::NIL : args[1]->type;
+            const auto &entry = operators[(detail * V::VARIANT_MAX + left) * V::VARIANT_MAX + right];
+            if (entry.call) {
+                GJVariant result{};
+                initialize_builtin_result(result, entry.result);
+                entry.call(builtin_payload(const_cast<GJVariant *>(args[0]), left),
+                    count == 1 ? nullptr : builtin_payload(const_cast<GJVariant *>(args[1]), right),
+                    builtin_payload(&result, entry.result));
+                gj_take(dst, &result);
+                return 1;
+            }
+        }
         // Resolve these fixed built-ins once. Borrow the engine's internal Array
         // through its public extension interface; no retain/release or name lookup.
         if (operation == GJ_ARRAY_SIZE) {
@@ -294,6 +366,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             }
             operation = GJ_CALL;
             name = "size";
+            if (cached && std::strcmp(cached->text, name)) cached = nullptr;
         } else if (operation == GJ_VECTOR2_NORMALIZED) {
             if (self && self->type == V::VECTOR2 && count == 0) {
                 static const StringName normalized_name("normalized");
@@ -307,6 +380,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             }
             operation = GJ_CALL;
             name = "normalized";
+            if (cached && std::strcmp(cached->text, name)) cached = nullptr;
         }
         if (operation == GJ_GET && self && self->type == V::ARRAY && count == 1 && args[0]->type == V::INT) {
             // The checked indexed API preserves negative indexes and bounds errors.
@@ -328,14 +402,70 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             operation == GJ_GET_NAMED || operation == GJ_SET_NAMED ||
             operation == GJ_DICTIONARY_HAS || operation == GJ_GET_OBJECT ||
             operation == GJ_NEW_OBJECT || operation == GJ_CALLABLE;
-        const godot::NativeProgram::Name *cached = nullptr;
-        if (named && name) {
-            if (ctx->runtime) {
-                const auto &names = static_cast<godot::NativeState *>(ctx->runtime)->program->names;
-                auto found = names.find(name);
-                if (found != names.end()) {
-                    cached = &found->second;
+        if (operation == GJ_CALL && cached && self && self->type == V::CALLABLE && cached->callable_op) {
+            using Name = godot::NativeProgram::Name;
+            static const auto storage = godot::gdextension_interface::variant_get_ptr_internal_getter(GDEXTENSION_VARIANT_TYPE_CALLABLE);
+            static const auto call = godot::gdextension_interface::variant_get_ptr_builtin_method(
+                GDEXTENSION_VARIANT_TYPE_CALLABLE, StringName("call")._native_ptr(), 3643564216);
+            static const auto callv = godot::gdextension_interface::variant_get_ptr_builtin_method(
+                GDEXTENSION_VARIANT_TYPE_CALLABLE, StringName("callv")._native_ptr(), 413578926);
+            static const auto bind = godot::gdextension_interface::variant_get_ptr_builtin_method(
+                GDEXTENSION_VARIANT_TYPE_CALLABLE, StringName("bind")._native_ptr(), 3224143119);
+            // The variadic ptrcall adapter measured more instructions on Godot
+            // 4.6. Keep it measurable; the default retains the cheaper path.
+            static const bool variadic_ptrcall = [] {
+                const char *value = std::getenv("GODOT_JIT_CALLABLE_PTRCALL");
+                return value && std::strcmp(value, "1") == 0;
+            }();
+            if ((cached->callable_op == Name::CALL && variadic_ptrcall) || cached->callable_op == Name::BIND ||
+                (cached->callable_op == Name::CALLV && count == 1 && args[0]->type == V::ARRAY)) {
+                GJVariant snapshot{};
+                if (cached->callable_op == Name::CALL)
+                    call(storage(self), reinterpret_cast<const void **>(const_cast<const GJVariant **>(args)), &snapshot, count);
+                else if (cached->callable_op == Name::BIND) {
+                    initialize_builtin_result(snapshot, V::CALLABLE);
+                    bind(storage(self), reinterpret_cast<const void **>(const_cast<const GJVariant **>(args)), storage(&snapshot), count);
                 }
+                else {
+                    const void *arguments[] = {array_storage(const_cast<GJVariant *>(args[0]))};
+                    callv(storage(self), arguments, &snapshot, 1);
+                }
+                gj_take(dst, &snapshot);
+                return 1;
+            }
+        }
+        if (cached && self && self->type > V::NIL && self->type < V::VARIANT_MAX && self->type != V::OBJECT) {
+            const auto &method = cached->methods[self->type];
+            if (operation == GJ_CALL && method.call && count == method.info->count) {
+                const auto &info = *method.info;
+                const void *arguments[16];
+                bool exact = true;
+                for (int j = 0; j < count; ++j) {
+                    const int type = info.arguments[j];
+                    if (type >= 0 && int(args[j]->type) != type) { exact = false; break; }
+                    arguments[j] = builtin_payload(const_cast<GJVariant *>(args[j]), type);
+                }
+                if (exact) {
+                    GJVariant result{};
+                    initialize_builtin_result(result, info.result);
+                    method.call(builtin_payload(self, self->type), arguments,
+                        info.result == -2 ? nullptr : builtin_payload(&result, info.result), count);
+                    gj_take(dst, &result);
+                    return 1;
+                }
+            }
+            const auto &member = cached->members[self->type];
+            if (operation == GJ_GET_NAMED && member.get && count == 0) {
+                GJVariant result{};
+                initialize_builtin_result(result, member.type);
+                member.get(builtin_payload(self, self->type), builtin_payload(&result, member.type));
+                gj_take(dst, &result);
+                return 1;
+            }
+            if (operation == GJ_SET_NAMED && member.set && count == 1 && int(args[0]->type) == member.type) {
+                member.set(builtin_payload(self, self->type), builtin_payload(const_cast<GJVariant *>(args[0]), member.type));
+                gj_clear(dst);
+                return 1;
             }
         }
         if (cached && operation == GJ_CALL && self) {
@@ -407,6 +537,12 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             break;
         }
         case GJ_CONSTRUCT: result = construct(detail, a); break;
+        case GJ_COERCE:
+            if (count != 1 || detail < 0 || detail >= V::VARIANT_MAX ||
+                !V::can_convert_strict(a.at(0)->get_type(), V::Type(detail)))
+                throw std::runtime_error("Invalid typed argument or assignment");
+            result = construct(detail, a);
+            break;
         case GJ_STRING: result = String::utf8(name, detail); break;
         case GJ_CALL: {
             GDExtensionCallError error{};

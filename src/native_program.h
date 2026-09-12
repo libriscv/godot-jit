@@ -10,24 +10,43 @@
 #include <godot_jit/c_module.h>
 #include <memory>
 #include <unordered_map>
-#include <string_view>
+#include <array>
 
 namespace godot {
+struct BuiltinMethodInfo {
+    int type;
+    const char *name;
+    uint32_t hash;
+    int result;
+    int count;
+    int arguments[16];
+};
+struct BuiltinMemberInfo { int type; const char *name; int result; };
+struct BuiltinOperatorInfo { int operation; int left; int right; int result; };
+struct BuiltinOperatorCache { GDExtensionPtrOperatorEvaluator call = nullptr; int result = -1; };
+const BuiltinOperatorCache *native_operators();
 struct NativeProgram {
     struct Name {
         StringName name;
         Variant key;
         Variant string_key;
-        explicit Name(const StringName &n) : name(n), key(n), string_key(String(n)) {}
+        const char *text;
+        enum CallableOp { NONE, CALL, CALLV, BIND } callable_op = NONE;
+        struct Method { const BuiltinMethodInfo *info = nullptr; GDExtensionPtrBuiltInMethod call = nullptr; };
+        struct Member { int type = -1; GDExtensionPtrGetter get = nullptr; GDExtensionPtrSetter set = nullptr; };
+        std::array<Method, Variant::VARIANT_MAX> methods{};
+        std::array<Member, Variant::VARIANT_MAX> members{};
+        explicit Name(const char *n);
     };
     std::unique_ptr<godot_jit::CModule> module;
     gdscript::IRProgram ir;
     std::string generated;
     String source_path;
     bool debug_info = false;
+    std::vector<bool> uses_self;
     std::unordered_map<std::string, int> functions;
     HashMap<StringName, int> methods;
-    std::unordered_map<std::string_view, Name> names;
+    std::vector<Name> names;
     std::vector<Variant> statics;
     Dictionary property_defaults;
     GJEntry entry = nullptr;
@@ -36,9 +55,12 @@ struct NativeProgram {
     static std::shared_ptr<NativeProgram> compile(const String &, const gdscript::CompilerOptions &, std::string &);
 };
 struct NativeState : std::enable_shared_from_this<NativeState> {
-    std::shared_ptr<NativeProgram> program;
+    // Reload creates a replacement NativeState. callp/Callable hold this state
+    // through reentry, so its immutable program needs no second owning copy.
+    const std::shared_ptr<NativeProgram> program;
     std::vector<Variant> members;
     ObjectID owner;
+    GDExtensionObjectPtr attached_owner = nullptr;
     std::string error;
     std::vector<Ref<UnsafeFunctionState>> coroutines;
     bool cancelling = false;
@@ -49,7 +71,7 @@ struct NativeState : std::enable_shared_from_this<NativeState> {
                 Variant &result, const Variant &operand, GJVariant *const *slots, int count, int destination);
     int restore(UnsafeFunctionState *, GJVariant *const *slots, int count);
     void resume(const Ref<UnsafeFunctionState> &, const Variant &);
-    explicit NativeState(std::shared_ptr<NativeProgram> p, Object *object = nullptr);
+    explicit NativeState(std::shared_ptr<NativeProgram> p, Object *object = nullptr, bool attached = false);
     bool invoke(int index, const Variant **args, int count, Variant &result, UnsafeFunctionState *resuming = nullptr);
     bool call(const StringName &, const Variant **, int, Variant &, GDExtensionCallError &, bool static_only = false);
 };

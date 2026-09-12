@@ -18,9 +18,9 @@ extern "C" int scalar_fail(GJContext *ctx, const char *s) {
     ctx->failed = 1;
     return 0;
 }
-extern "C" int scalar_op(GJContext *ctx, int op, GJVariant *d, GJVariant *, const char *, int detail,
+extern "C" int scalar_op(GJContext *ctx, int op, GJVariant *d, GJVariant *, int, int detail,
                          const GJVariant *const *a, int count) {
-    if (op == GJ_CONSTRUCT && count == 1 && detail == 2 && a[0]->type == 2) {
+    if ((op == GJ_CONSTRUCT || op == GJ_COERCE) && count == 1 && detail == 2 && a[0]->type == 2) {
         *d = *a[0];
         return 1;
     }

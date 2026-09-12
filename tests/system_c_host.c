@@ -12,9 +12,9 @@ int gj_fail(GJContext *ctx, const char *message) {
     ctx->failed = 1;
     return 0;
 }
-int gj_op(GJContext *ctx, int op, GJVariant *d, GJVariant *self, const char *name,
+int gj_op(GJContext *ctx, int op, GJVariant *d, GJVariant *self, int name_id,
           int detail, const GJVariant *const *args, int count) {
-    if (op == GJ_CONSTRUCT && detail == 2 && count == 1 && args[0]->type == 2) {
+    if ((op == GJ_CONSTRUCT || op == GJ_COERCE) && detail == 2 && count == 1 && args[0]->type == 2) {
         *d = *args[0];
         return 1;
     }

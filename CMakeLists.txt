@@ -10,6 +10,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 option(GODOT_JIT_BUILD_TESTS "Build addon tests" ON)
+option(GODOT_JIT_BENCHMARK_GATE "Run the local typical performance regression gate (noisy on shared CI)" OFF)
 set(GODOTCPP_DISABLE_EXCEPTIONS OFF CACHE BOOL "Enable C++ exceptions")
 set(GODOTCPP_API_VERSION "4.6" CACHE STRING "Godot API version")
 set(GODOTCPP_BUILD_PROFILE "${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_profile.json"
@@ -53,10 +54,17 @@ configure_file(cmake/abi_source.h.in generated/abi_source.h @ONLY)
 find_package(Threads REQUIRED)
 add_library(godot_jit_core STATIC src/c_module.cpp)
 target_include_directories(godot_jit_core PUBLIC include PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(godot_jit_core PRIVATE godot_jit_tcc Threads::Threads)
+target_link_libraries(godot_jit_core PRIVATE godot_jit_tcc Threads::Threads ${CMAKE_DL_LIBS})
 
 add_library(godot-jit SHARED src/godot_jit.cpp src/c_abi.cpp src/register_types.cpp src/native_program.cpp src/function_state.cpp src/property_defaults.cpp src/unsafe_gdscript.cpp src/unsafe_language.cpp src/script_instance.cpp src/unsafe_debugger.cpp src/unsafe_highlighter.cpp src/unsafe_editor.cpp)
-target_include_directories(godot-jit PRIVATE src)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated/builtin_methods.inc"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_builtin_cache.py"
+        "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/extension_api.json" "${CMAKE_CURRENT_BINARY_DIR}/generated/builtin_methods.inc"
+    DEPENDS scripts/generate_builtin_cache.py "${CMAKE_CURRENT_BINARY_DIR}/godot-cpp/extension_api.json"
+    VERBATIM)
+target_sources(godot-jit PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated/builtin_methods.inc")
+target_include_directories(godot-jit PRIVATE src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(godot-jit PRIVATE godot-cpp godot_jit_core godot_jit::safegdscript)
 get_target_property(jit_platform godot-cpp GODOTCPP_PLATFORM)
 get_target_property(jit_arch godot-cpp GODOTCPP_ARCH)
@@ -85,10 +93,15 @@ if(GODOT_JIT_BUILD_TESTS)
     find_package(Python3 QUIET COMPONENTS Interpreter)
     if(Python3_Interpreter_FOUND)
         add_test(NAME godot_jit_demo_compat COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/demo_compat.py")
+        add_test(NAME godot_jit_benchmark_report COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_report_test.py")
     endif()
     add_executable(godot_jit_basic tests/basic.cpp)
     target_link_libraries(godot_jit_basic PRIVATE godot_jit_core godot_jit::safegdscript)
     add_test(NAME godot_jit_basic COMMAND godot_jit_basic)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        add_test(NAME godot_jit_basic_cc COMMAND godot_jit_basic)
+        set_tests_properties(godot_jit_basic_cc PROPERTIES ENVIRONMENT "GODOT_JIT_CC=${CMAKE_C_COMPILER}")
+    endif()
     add_executable(godot_jit_c_backend tests/c_backend.cpp)
     target_link_libraries(godot_jit_c_backend PRIVATE godot_jit_core godot_jit::safegdscript)
     add_test(NAME godot_jit_c_backend COMMAND godot_jit_c_backend "${CMAKE_CURRENT_BINARY_DIR}/test_backend.c")
@@ -125,6 +138,7 @@ if(GODOT_JIT_BUILD_TESTS)
         file(GENERATE OUTPUT "${jit_test_project}/tests/async.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/async.gd" NEWLINE_STYLE UNIX)
         file(GENERATE OUTPUT "${jit_test_project}/tests/math.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/math.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/backend.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/backend.gd")
+        file(GENERATE OUTPUT "${jit_test_project}/tests/baseline.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/baseline.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/editor.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/editor.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/compatibility.gd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/bin/tests/compatibility.gd")
         file(GENERATE OUTPUT "${jit_test_project}/tests/debugger_base.ugd" INPUT "${CMAKE_CURRENT_SOURCE_DIR}/tests/ugd/debugger_base.ugd" NEWLINE_STYLE UNIX)
@@ -180,6 +194,22 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_backend COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/backend.gd)
         set_tests_properties(godot_jit_backend PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        add_test(NAME godot_jit_baseline COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+            --headless --path "${jit_test_project}" --script res://tests/baseline.gd)
+        set_tests_properties(godot_jit_baseline PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30
+            FAIL_REGULAR_EXPRESSION "SCRIPT ERROR:;ERROR:" ENVIRONMENT
+            "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            add_test(NAME godot_jit_baseline_cc COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
+                --headless --path "${jit_test_project}" --script res://tests/baseline.gd)
+            set_tests_properties(godot_jit_baseline_cc PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 60
+                FAIL_REGULAR_EXPRESSION "SCRIPT ERROR:;ERROR:" ENVIRONMENT
+                "GODOT_JIT_CC=${CMAKE_C_COMPILER};XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
+            add_test(NAME godot_jit_perf_map COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/perf_map.py" "${GODOT_JIT_GODOT_EXECUTABLE}" "${jit_test_project}")
+            set_tests_properties(godot_jit_perf_map PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 40 ENVIRONMENT
+                "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
+        endif()
         add_test(NAME godot_jit_language COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/language.gd)
         set_tests_properties(godot_jit_language PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 60)
@@ -207,6 +237,13 @@ if(GODOT_JIT_BUILD_TESTS)
         add_test(NAME godot_jit_typical COMMAND "${GODOT_JIT_GODOT_EXECUTABLE}"
             --headless --path "${jit_test_project}" --script res://tests/typical_benchmark.gd -- --check-only)
         set_tests_properties(godot_jit_typical PROPERTIES FIXTURES_REQUIRED godot_jit_import TIMEOUT 30)
+        if(GODOT_JIT_BENCHMARK_GATE AND Python3_Interpreter_FOUND)
+            add_test(NAME godot_jit_typical_gate COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_report.py" --gate "${GODOT_JIT_GODOT_EXECUTABLE}" "${jit_test_project}")
+            set_tests_properties(godot_jit_typical_gate PROPERTIES FIXTURES_REQUIRED godot_jit_import
+                RUN_SERIAL TRUE TIMEOUT 150 LABELS performance
+                ENVIRONMENT "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
+        endif()
         set_tests_properties(godot_jit_math godot_jit_async godot_jit_import godot_jit_extension godot_jit_backend godot_jit_language godot_jit_highlighter godot_jit_editor godot_jit_debugger_remote godot_jit_typical PROPERTIES ENVIRONMENT
             "XDG_DATA_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-data;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;XDG_CACHE_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-cache")
     endif()

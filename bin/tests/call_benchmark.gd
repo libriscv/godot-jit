@@ -72,11 +72,14 @@ func callable_calls(callback: Callable, count: int) -> int:
 
 func measure(script: Script, method: String, iterations: int) -> Dictionary:
     var samples: Array[int] = []
+    var instructions: Array[int] = []
+    var count_instructions = OS.get_environment("GODOT_JIT_INSTRUCTIONS") == "1"
     var checksum: Variant = 0
     for repeat in range(6):
         var receiver = script.new()
         var other = script.new()
         var callback = Callable(other, "add")
+        var before = GodotJIT.get_instruction_count() if count_instructions else -1
         var start = Time.get_ticks_usec()
         var result: Variant
         match method:
@@ -85,14 +88,17 @@ func measure(script: Script, method: String, iterations: int) -> Dictionary:
             "object_calls": result = receiver.object_calls(other, iterations)
             "callable_calls": result = receiver.callable_calls(callback, iterations)
         var elapsed = Time.get_ticks_usec() - start
+        var after = GodotJIT.get_instruction_count() if count_instructions else -1
         if repeat > 0:
             samples.append(elapsed)
+            instructions.append(after - before if before >= 0 and after >= before else -1)
         if repeat > 0 and (result != checksum or typeof(result) != typeof(checksum)):
             push_error("Unstable result for " + method)
             return {"microseconds": 0, "checksum": null}
         checksum = result
     samples.sort()
-    return {"microseconds": samples[samples.size() / 2], "checksum": checksum}
+    instructions.sort()
+    return {"instructions": float(instructions[2]) / iterations if instructions[0] >= 0 else -1.0, "microseconds": samples[samples.size() / 2], "checksum": checksum}
 
 func _initialize() -> void:
     var baseline = GDScript.new()
@@ -116,6 +122,8 @@ func _initialize() -> void:
             iterations = max(1, int(argument))
     print("Call benchmark: ", iterations, " iterations; median of 5 runs after warm-up; compilation excluded")
     for method in ["integer_loop", "float_loop", "array_loop", "dictionary_loop", "vector_loop", "gameplay_loop", "local_calls", "object_calls", "callable_calls"]:
+        if not OS.get_environment("GODOT_JIT_BENCH_ROW").is_empty() and method != OS.get_environment("GODOT_JIT_BENCH_ROW"):
+            continue
         var gd = measure(baseline, method, iterations)
         var ugd = measure(native, method, iterations)
         if gd.checksum == null or gd.checksum != ugd.checksum or typeof(gd.checksum) != typeof(ugd.checksum):
@@ -123,4 +131,6 @@ func _initialize() -> void:
             quit(1)
             return
         print("%s: GDScript=%d us UnsafeGDScript=%d us Unsafe/GD=%.3f checksum=%s" % [method, gd.microseconds, ugd.microseconds, float(ugd.microseconds) / max(1, gd.microseconds), gd.checksum])
+        if OS.get_environment("GODOT_JIT_INSTRUCTIONS") == "1":
+            print("%s instructions: GD=%.3f JIT=%.3f insn/op" % [method, gd.instructions, ugd.instructions])
     quit()
