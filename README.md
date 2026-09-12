@@ -47,6 +47,13 @@ Editor completion, documentation, and profiler integration = not yet.
 
 Since nobody's paying for this, don't have any expectations. Thank.
 
+## Extra language syntax
+
+Since this is based on the Godot Sandbox SGD compiler, there is the same
+support for nullable types, unions, structs, traits and compact if var.
+
+I will avoid repeating myself so [here's the blog post](https://libriscv.no/blog/godot-sandbox-fortytwo#structs-with-methods).
+
 ## Godot JIT directly
 
 ```gdscript
