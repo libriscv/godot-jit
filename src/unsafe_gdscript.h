@@ -20,6 +20,8 @@ class UnsafeGDScript : public ScriptExtension {
     String source, compile_error;
     String nested_name;
     Dictionary pending_fields;
+    mutable Dictionary nested_classes;
+    static Ref<UnsafeGDScript> nested_script(const std::shared_ptr<NativeProgram> &, const String &);
     std::shared_ptr<NativeProgram> program;
     std::shared_ptr<NativeState> static_state;
     mutable std::unordered_set<UnsafeGDScriptInstance *> instances;

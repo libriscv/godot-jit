@@ -1,0 +1,26 @@
+extends RefCounted
+const Other = preload("res://tests/ugd/nested_classes.ugd")
+
+func test_external_nested_class_construction() -> bool:
+	var strip = Other.DayStrip.new()
+	var values: Array = []
+	strip.clicked.connect(func(index: int): values.append(index))
+	strip.trigger()
+	var ok = strip is Control and strip.initial == 7 \
+		and strip.custom_minimum_size == Vector2(120, 14) and values == [7] \
+		and strip.get_script() == Other.DayStrip
+	strip.free()
+	return ok
+
+func test_external_inherited_constructor() -> bool:
+	var strip = Other.ChildStrip.new(11)
+	var ok = strip.initial == 11 and strip.child_default == 9 \
+		and strip.has_signal("clicked") and strip.get_script() == Other.ChildStrip
+	strip.free()
+	return ok
+
+func test_external_fresh_defaults_and_static_method() -> bool:
+	var first = Other.Plain.new()
+	var second = Other.Plain.new()
+	first.values.append(1)
+	return second.values.is_empty() and Other.DayStrip.answer() == 42

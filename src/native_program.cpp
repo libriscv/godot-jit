@@ -24,7 +24,7 @@ const BuiltinOperatorCache *native_operators() {
     }();
     return cache.data();
 }
-NativeProgram::Name::Name(const char *n) : name(n), key(name), string_key(String(name)), text(n) {
+NativeProgram::Name::Name(const char *n) : name(String::utf8(n)), key(name), string_key(String(name)), text(n) {
     if (name == StringName("call")) callable_op = CALL;
     else if (name == StringName("callv")) callable_op = CALLV;
     else if (name == StringName("bind")) callable_op = BIND;

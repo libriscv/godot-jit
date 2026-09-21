@@ -1,0 +1,20 @@
+@tool
+extends RefCounted
+
+class DayStrip extends Control:
+	signal clicked(index: int)
+	var values: Array = []
+	var initial := 3
+	func _init(value: int = 7):
+		initial = value
+		custom_minimum_size = Vector2(120, 14)
+	func trigger():
+		clicked.emit(initial)
+	static func answer() -> int:
+		return 42
+
+class ChildStrip extends DayStrip:
+	var child_default := 9
+
+class Plain:
+	var values: Array = []

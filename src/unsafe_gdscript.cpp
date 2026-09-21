@@ -300,7 +300,31 @@ Dictionary UnsafeGDScript::_get_constants() const {
         if (global.is_const && !global.is_member())
             constants[str(global.name)] = program->statics[i];
     }
+    if (nested_name.is_empty()) {
+        for (const auto &cls : program->ir.class_signatures) {
+            if (cls.is_struct || cls.is_trait) continue;
+            const String name = str(cls.name);
+            if (!nested_classes.has(name))
+                nested_classes[name] = nested_script(program, name);
+            constants[name] = nested_classes[name];
+        }
+    }
     return constants;
+}
+Ref<UnsafeGDScript> UnsafeGDScript::nested_script(const std::shared_ptr<NativeProgram> &program, const String &name) {
+    if (const auto *id = program->nested_scripts.getptr(name)) {
+        auto *cached = Object::cast_to<UnsafeGDScript>(ObjectDB::get_instance(*id));
+        if (cached) return Ref<UnsafeGDScript>(cached);
+    }
+    Ref<UnsafeGDScript> script;
+    script.instantiate();
+    script->nested_name = name;
+    script->program = program;
+    script->static_state = std::make_shared<NativeState>(program);
+    program->nested_scripts[name] = script->get_instance_id();
+    gdextension_interface::object_set_script_instance(script->_owner,
+        memnew(UnsafeGDScriptInstance(script.ptr(), script.ptr(), false, true))->create_native());
+    return script;
 }
 Dictionary unsafe_constants(const gdscript::IRProgram &ir) {
     Dictionary d;
@@ -513,6 +537,7 @@ Error UnsafeGDScript::_reload(bool keep) {
         for (int i = 0; i < keys.size(); ++i)
             instance->set(keys[i], snapshot.second[keys[i]]);
     }
+    nested_classes.clear();
     if (previous_static_state) previous_static_state->cancel_coroutines();
     for (const auto &previous : previous_states) previous.second->cancel_coroutines();
     // Script resources themselves dispatch static methods, as GDScript does.
@@ -556,6 +581,13 @@ Variant UnsafeGDScript::new_instance(const Variant **args, GDExtensionInt count,
     if (!program) {
         error.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
         return {};
+    }
+    if (!nested_name.is_empty()) {
+        Variant result;
+        if (!static_state->call("@" + nested_name + ".@new", args, count, result, error)
+            && !static_state->error.empty())
+            ERR_PRINT(str(static_state->error));
+        return result;
     }
     if (!_has_method("_init") && count) {
         error.error = GDEXTENSION_CALL_ERROR_TOO_MANY_ARGUMENTS;
@@ -893,14 +925,12 @@ Variant bind_native_class(GJContext *ctx, const String &name, const Variant &val
     Object *owner = object;
     if (!owner)
         throw std::runtime_error("Native class has no owner");
-    Ref<UnsafeGDScript> script;
-    script.instantiate();
-    script->nested_name = name;
-    script->program = state->program;
+    Ref<UnsafeGDScript> script = UnsafeGDScript::nested_script(state->program, name);
+    const Dictionary previous_fields = script->pending_fields;
     script->pending_fields = fields.duplicate();
     script->pending_fields.erase("@base");
     owner->set_script(script);
-    script->pending_fields = Dictionary();
+    script->pending_fields = previous_fields;
     return object;
 }
 

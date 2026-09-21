@@ -49,6 +49,8 @@ struct NativeProgram {
     std::vector<Name> names;
     std::vector<Variant> statics;
     Dictionary property_defaults;
+    // Weak identities avoid a program -> Script -> program ownership cycle.
+    HashMap<StringName, ObjectID> nested_scripts;
     GJEntry entry = nullptr;
     using FunctionEntry = int (*)(GJContext *, GJVariant *, const GJVariant *const *, int);
     const FunctionEntry *function_entries = nullptr;

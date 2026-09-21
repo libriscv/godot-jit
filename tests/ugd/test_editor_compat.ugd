@@ -102,3 +102,40 @@ func test_bare_return_at_lambda_delimiter() -> bool:
 
 func test_nested_class_preload() -> bool:
 	return Row.Value == load("res://tests/ugd/demo_value.ugd")
+
+func test_unicode_dictionary_literal_and_dynamic_keys() -> bool:
+	var keys = ["−X", "−Y", "⟳", "日本語", "ø"]
+	var values = {}
+	for key in keys:
+		values[key] = 7
+	if values["−X"] != 7 or values["日本語"] != 7:
+		return false
+	values["−Y"] = 9
+	var key = keys[1]
+	return values[key] == 9 and values.size() == keys.size()
+
+func null_comparisons(value) -> bool:
+	return value == null and null == value and not (value != null) and not (null != value)
+
+func typed_null_comparisons(value: Node) -> bool:
+	return value == null and null == value and not (value != null) and not (null != value)
+
+func test_null_object_variant_comparisons() -> bool:
+	var node = Node.new()
+	var parent = Node.new()
+	var ok = null_comparisons(node.get_parent()) and typed_null_comparisons(node.get_parent())
+	if node.get_parent() != null:
+		ok = false
+	parent.add_child(node)
+	ok = ok and not null_comparisons(node.get_parent()) and node.get_parent() != null
+	parent.remove_child(node)
+	ok = ok and null_comparisons(node.get_parent()) and null_comparisons(null)
+	node.free()
+	parent.free()
+	return ok
+
+func typed_class_null(value: Row) -> bool:
+	return value == null and null == value
+
+func test_null_nested_class_parameter() -> bool:
+	return typed_class_null(null) and not typed_class_null(Row.new())

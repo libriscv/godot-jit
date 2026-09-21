@@ -503,7 +503,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
                 godot::gdextension_interface::variant_get_keyed(self, cached->key._native_ptr(), &snapshot, &ok);
                 if (!ok) {
                     gj_clear(&snapshot);
-                    return gj_fail(ctx, "Invalid Variant operation or property/index access");
+                    return gj_fail(ctx, (std::string("Invalid Dictionary property access: ") + name).c_str());
                 }
                 gj_clear(dst);
                 *dst = snapshot;
@@ -524,7 +524,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
         V result;
         bool valid = true;
         StringName uncached;
-        if (!cached && named && name) uncached = StringName(name);
+        if (!cached && named && name) uncached = StringName(String::utf8(name));
         const StringName &member = cached ? cached->name : uncached;
         auto object = [&]() -> V & {
             if (!self) throw std::runtime_error("This operation requires a receiver");
@@ -564,7 +564,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             if (error.error != GDEXTENSION_CALL_OK) throw std::runtime_error(std::string("Method call failed: ") + name);
             break;
         }
-        case GJ_CLASS_BIND: result = godot::bind_native_class(ctx, String(name), object()); break;
+        case GJ_CLASS_BIND: result = godot::bind_native_class(ctx, String::utf8(name), object()); break;
         case GJ_SUPER_CALL: {
             auto *receiver = static_cast<godot::Object *>(object());
             if (!receiver) throw std::runtime_error("super requires an Object");
@@ -616,7 +616,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             break;
         }
         case GJ_SET_NAMED:
-            if (object().get_type() == V::DICTIONARY) object().set(detail == 4 ? V(String(name)) : V(member), *a.at(0), &valid);
+            if (object().get_type() == V::DICTIONARY) object().set(detail == 4 ? V(String::utf8(name)) : V(member), *a.at(0), &valid);
             else object().set_named(member, *a.at(0), valid);
             break;
         case GJ_DICTIONARY_HAS: result = object().get_type() == V::DICTIONARY && Dictionary(object()).has(member); break;
@@ -655,7 +655,7 @@ extern "C" int gj_op(GJContext *ctx, int operation, GJVariant *dst, GJVariant *s
             }
             break;
         }
-        case GJ_LOAD: result = godot::ResourceLoader::get_singleton()->load(name ? String(name) : String(*a.at(0))); break;
+        case GJ_LOAD: result = godot::ResourceLoader::get_singleton()->load(name ? String::utf8(name) : String(*a.at(0))); break;
         case GJ_GET_OBJECT: {
             if (std::string(name) == "self") result = object();
             else if (godot::Engine::get_singleton()->has_singleton(member)) {
