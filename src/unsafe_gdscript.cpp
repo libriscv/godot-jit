@@ -222,19 +222,49 @@ TypedArray<Dictionary> UnsafeGDScript::_get_script_property_list() const {
         a.push_back(property_dict(p));
     return a;
 }
+std::vector<gdscript::FunctionSignature> UnsafeGDScript::signals() const {
+    if (!program) return {};
+    if (nested_name.is_empty()) return program->ir.signals;
+    std::vector<gdscript::FunctionSignature> result;
+    String current = nested_name;
+    while (!current.is_empty()) {
+        String base;
+        for (const auto &cls : program->ir.class_signatures) {
+            if (str(cls.name) != current) continue;
+            result.insert(result.end(), cls.signals.begin(), cls.signals.end());
+            base = str(cls.base_name);
+            break;
+        }
+        current = base;
+    }
+    return result;
+}
 bool UnsafeGDScript::_has_script_signal(const StringName &n) const {
-    if (program)
-        for (auto &s : program->ir.signals)
-            if (str(s.name) == String(n))
-                return true;
+    if (!program) return false;
+    if (nested_name.is_empty()) {
+        for (const auto &signal : program->ir.signals)
+            if (str(signal.name) == String(n)) return true;
+        return false;
+    }
+    String current = nested_name;
+    while (!current.is_empty()) {
+        String base;
+        for (const auto &cls : program->ir.class_signatures) {
+            if (str(cls.name) != current) continue;
+            for (const auto &signal : cls.signals)
+                if (str(signal.name) == String(n)) return true;
+            base = str(cls.base_name);
+            break;
+        }
+        current = base;
+    }
     return false;
 }
 TypedArray<Dictionary> UnsafeGDScript::_get_script_signal_list() const {
-    TypedArray<Dictionary> a;
-    if (program)
-        for (auto &s : program->ir.signals)
-            a.push_back(method_dict(method_info(s), ""));
-    return a;
+    TypedArray<Dictionary> result;
+    for (const auto &signal : signals())
+        result.push_back(method_dict(method_info(signal), ""));
+    return result;
 }
 bool UnsafeGDScript::_has_property_default_value(const StringName &n) const {
     if (program && program->property_defaults.has(n)) return true;

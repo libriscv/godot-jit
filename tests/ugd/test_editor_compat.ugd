@@ -1,0 +1,104 @@
+extends RefCounted
+
+signal outer_signal
+var names: PackedStringArray = []
+var bytes: PackedByteArray = []
+var ints32: PackedInt32Array = []
+var ints64: PackedInt64Array = []
+var floats32: PackedFloat32Array = []
+var floats64: PackedFloat64Array = []
+var vectors2: PackedVector2Array = []
+var vectors3: PackedVector3Array = []
+var vectors4: PackedVector4Array = []
+var colors: PackedColorArray = []
+
+class Row extends RefCounted:
+	const Value = preload("res://tests/ugd/demo_value.ugd")
+	signal clicked(index: int)
+	func trigger(index: int):
+		clicked.emit(index)
+	func signal_value() -> Signal:
+		return clicked
+
+class ChildRow extends Row:
+	func trigger_inherited(index: int):
+		clicked.emit(index)
+
+func test_empty_packed_members() -> bool:
+	return typeof(names) == TYPE_PACKED_STRING_ARRAY and names.is_empty() \
+		and typeof(bytes) == TYPE_PACKED_BYTE_ARRAY and bytes.is_empty() \
+		and typeof(ints32) == TYPE_PACKED_INT32_ARRAY and ints32.is_empty() \
+		and typeof(ints64) == TYPE_PACKED_INT64_ARRAY and ints64.is_empty() \
+		and typeof(floats32) == TYPE_PACKED_FLOAT32_ARRAY and floats32.is_empty() \
+		and typeof(floats64) == TYPE_PACKED_FLOAT64_ARRAY and floats64.is_empty() \
+		and typeof(vectors2) == TYPE_PACKED_VECTOR2_ARRAY and vectors2.is_empty() \
+		and typeof(vectors3) == TYPE_PACKED_VECTOR3_ARRAY and vectors3.is_empty() \
+		and typeof(vectors4) == TYPE_PACKED_VECTOR4_ARRAY and vectors4.is_empty() \
+		and typeof(colors) == TYPE_PACKED_COLOR_ARRAY and colors.is_empty()
+
+func test_builtin_integer_constants() -> bool:
+	return Vector2.AXIS_Y == 1 and Vector2i.AXIS_X == 0 \
+		and Vector3.AXIS_Z == 2 and Vector3i.AXIS_Y == 1 \
+		and Vector4.AXIS_W == 3 and Vector4i.AXIS_Z == 2 \
+		and Projection.PLANE_BOTTOM == 5
+
+func test_lambda_dedent_and_same_line_close() -> bool:
+	var callbacks: Array = []
+	var values: Array = []
+	callbacks.append(func(enabled: bool):
+		if not enabled:
+			return
+		var value := 1
+		if enabled:
+			value += 2
+		else:
+			value = 0
+		values.append(value))
+	callbacks[0].call(false)
+	callbacks[0].call(true)
+	return values == [3]
+
+func test_lambda_nested_brackets_and_lambdas() -> bool:
+	var callbacks: Array = []
+	var values: Array = []
+	callbacks.append(func():
+		var nested: Array = []
+		nested.append(func():
+			if true:
+				values.append(4)
+			values.append(5))
+		nested[0].call()
+		values.append(6))
+	callbacks[0].call()
+	return values == [4, 5, 6]
+
+func test_nested_signal_metadata_and_dispatch() -> bool:
+	var row = Row.new()
+	var child = ChildRow.new()
+	var values: Array = []
+	row.clicked.connect(func(index: int): values.append(index))
+	child.clicked.connect(func(index: int): values.append(index))
+	row.trigger(7)
+	child.trigger_inherited(8)
+	row.signal_value().emit(9)
+	return values == [7, 8, 9] and row.has_signal("clicked") \
+		and child.has_signal("clicked") and not row.has_signal("outer_signal") \
+		and row.get_script().get_script_signal_list().size() == 1
+
+func test_standalone_lambda_followed_by_if() -> bool:
+	var values: Array = []
+	var callback := func():
+		values.append(1)
+	if values.is_empty():
+		callback.call()
+	return values == [1]
+
+func test_bare_return_at_lambda_delimiter() -> bool:
+	var callbacks: Array = []
+	callbacks.append(func():
+		if true:
+			return)
+	return callbacks[0].call() == null
+
+func test_nested_class_preload() -> bool:
+	return Row.Value == load("res://tests/ugd/demo_value.ugd")

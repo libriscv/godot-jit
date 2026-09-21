@@ -70,6 +70,7 @@ class UnsafeGDScript : public ScriptExtension {
     int method_index(const StringName &) const;
     int property_index(const StringName &) const;
     std::vector<MethodInfo> methods() const;
+    std::vector<gdscript::FunctionSignature> signals() const;
     std::vector<PropertyInfo> properties() const;
     UnsafeGDScript();
     ~UnsafeGDScript() override;
