@@ -1,0 +1,3 @@
+extends RefCounted
+
+var scope: Dictionary = {"generation": 1}

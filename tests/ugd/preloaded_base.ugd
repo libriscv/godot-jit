@@ -1,0 +1,15 @@
+extends "inheritance/root.ugd"
+
+signal changed(value: int)
+const ANSWER = 42
+var initial: int = 7
+var values: Array = []
+
+func _init(value: int = 7):
+	initial = value
+
+func answer() -> int:
+	return ANSWER
+
+func inherited() -> int:
+	return initial

@@ -1,0 +1,22 @@
+extends RefCounted
+
+const Holder = preload("res://tests/ugd/property_holder.ugd")
+
+class Unused extends RefCounted:
+    pass
+
+func test_chained_external_dictionary_write() -> bool:
+    var h = Holder.new()
+    h.scope.generation = 2
+    return h.scope.generation == 2
+
+func test_chained_external_dictionary_new_key() -> bool:
+    var h = Holder.new()
+    h.scope.added = 3
+    return h.scope.added == 3 and h.scope.generation == 1
+
+func test_untyped_dictionary_write() -> bool:
+    var values: Variant = {"generation": 1, "empty": null}
+    values.generation += 1
+    values.added = 3
+    return values.generation == 2 and values.added == 3 and values.empty == null

@@ -25,13 +25,19 @@ func run_checks():
         EngineDebugger.remove_breakpoint(17, script.resource_path)
         print("CLEARED ", instance.looping())
     elif mode == "error":
+        call_deferred("recover_after_error", instance)
         instance.fail(0)
-        print("RECOVERED ", instance.looping())
+        print("UNEXPECTED SUCCESS")
     elif mode == "other":
         var other = script.new()
         other.member = 100
         print("RESULT ", instance.call_other(other))
     elif mode == "nested":
         print("RESULT ", instance.nested())
+    print("DEBUGGER DONE")
+    quit()
+
+func recover_after_error(instance):
+    print("RECOVERED ", instance.looping())
     print("DEBUGGER DONE")
     quit()

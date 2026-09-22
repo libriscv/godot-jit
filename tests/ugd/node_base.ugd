@@ -1,0 +1,14 @@
+extends Node
+
+var log: Array[String] = []
+
+func fetch(path: String) -> Dictionary:
+	return {"from": "base", "path": path}
+
+func load_all() -> bool:
+	var reply := fetch("/api/thing")
+	log.append(str(reply))
+	return reply.get("from") == "stub"
+
+func load_explicit() -> bool:
+	return self.fetch("/api/explicit").get("from") == "stub"

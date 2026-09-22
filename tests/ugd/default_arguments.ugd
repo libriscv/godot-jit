@@ -1,0 +1,23 @@
+extends RefCounted
+
+const DIRECTION = Vector3(1, 2, 3)
+
+static func with_vector(value: Variant, fallback := Vector3.ZERO) -> Vector3:
+	return fallback
+
+func with_callable(name: String, on_empty := Callable()) -> String:
+	return "%s %s" % [name, str(on_empty.is_valid())]
+
+func with_values(vector := DIRECTION, values := [1, 2], mapping := {"answer": 42}) -> Array:
+	values.append(mapping.answer)
+	return [vector, values]
+
+func with_literals(name: String, flag := false, key := "", n := 0) -> String:
+	return "%s %s %s %d" % [name, str(flag), key, n]
+
+class Nested:
+	var value: Vector3
+	func _init(initial := Vector3.ONE):
+		value = initial
+	func answer(fallback := Vector3.ZERO) -> Vector3:
+		return fallback

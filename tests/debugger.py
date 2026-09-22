@@ -80,7 +80,7 @@ def run(mode, commands, expected, stops):
     actual = re.findall(r"Debugger Break, Reason:.*?\n\*Frame 0 - (.*?)\n", output)
     if code is None:
         raise AssertionError(f"{mode} timed out:\n{output}\nStops: {actual}")
-    if code or "DEBUGGER DONE" not in output or actual != stops or any(x not in output for x in expected):
+    if code or "DEBUGGER DONE" not in output or "UNEXPECTED SUCCESS" in output or actual != stops or any(x not in output for x in expected):
         raise AssertionError(f"{mode} failed (exit {code}):\n{output}\nStops: {actual}")
     print(f"Debugger {mode}: passed")
 
@@ -96,8 +96,8 @@ run("step", ["n", "n", "o", "c"], ["RESULT 16"],
     [location(7, "inner"), location(8, "inner"), location(9, "inner"), location(13, "outer")])
 run("loop", ["locals", "c", "locals", "c", "locals", "c"], ["i: 0", "i: 1", "i: 2", "RESULT 3", "CLEARED 3"],
     [location(17, "looping")] * 3)
-run("error", ["bt", "locals", "c"], ["Integer division by zero", "before_error: 99", "RECOVERED 3"],
-    [location(21, "fail")])
+run("error", ["bt", "locals", "c", "c"], ["Integer division by zero", "before_error: 99", "RECOVERED 3"],
+    [location(21, "fail"), "res://tests/debugger.gd:29 in function 'run_checks'"])
 run("other", ["bt", "locals", "members", "fr 1", "members", "c"], ["local_value: 22", "member: 100", "member: 7", "RESULT 123"],
     [location(7, "inner")])
 run("nested", ["bt", "locals", "members", "c"], ["nested_local: 32", "nested_member: 31", "RESULT 63"],

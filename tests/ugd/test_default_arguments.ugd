@@ -1,0 +1,30 @@
+extends RefCounted
+
+const Defaults = preload("res://tests/ugd/default_arguments.ugd")
+
+func test_cross_script_defaults() -> bool:
+	var d = Defaults.new()
+	return d.with_literals("a") == "a false  0" \
+		and d.with_callable("a") == d.with_callable("a", Callable()) \
+		and Defaults.with_vector(null) == Defaults.with_vector(null, Vector3.ZERO)
+
+func test_compound_defaults_are_fresh() -> bool:
+	var d = Defaults.new()
+	var first = d.with_values()
+	var second = d.with_values()
+	return first == [Vector3(1, 2, 3), [1, 2, 42]] and first == second
+
+func test_nested_defaults() -> bool:
+	var d = Defaults.Nested.new()
+	return d.value == Vector3.ONE and d.answer() == Vector3.ZERO
+
+func test_callable_defaults() -> bool:
+	var d = Defaults.new()
+	var callback = d.with_callable
+	var lambda = func(value := Vector3.ONE): return value
+	return callback.call("a") == "a false" and lambda.call() == Vector3.ONE
+
+func test_captured_callable_defaults() -> bool:
+	var offset = Vector3.ONE
+	var lambda = func(value := Vector3.ZERO): return offset + value
+	return lambda.call() == Vector3.ONE

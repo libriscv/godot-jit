@@ -1,0 +1,25 @@
+extends RefCounted
+
+const Base = preload("preloaded_base.ugd")
+
+class Derived extends Base:
+	func answer() -> int:
+		return super.answer() + 1
+
+class Child extends Derived:
+	func answer() -> int:
+		return super.answer() + 1
+
+func test_preloaded_base_override() -> bool:
+	return Base.new().answer() == 42 and Derived.new().answer() == 43 and Child.new().answer() == 44 \
+		and Child.new().root_vector() == Vector3.ZERO
+
+func test_inherited_fields_and_constructor() -> bool:
+	var first = Derived.new(11)
+	var second = Derived.new()
+	first.values.append(1)
+	return first.inherited() == 11 and second.inherited() == 7 and second.values.is_empty()
+
+func test_inherited_script_identity_and_signal() -> bool:
+	var d = Derived.new()
+	return d.get_script().get_base_script() == Base and d.has_signal("changed")

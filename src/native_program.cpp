@@ -260,7 +260,17 @@ bool NativeState::call(const StringName &name, const Variant **args, int count, 
     std::vector<Variant> values(total);
     std::vector<const Variant *> pointers(total);
     for (int i = 0; i < total; ++i) {
-        values[i] = i < count ? *args[i] : parameter_default(signature.parameters[i - implicit]);
+        if (i < count) values[i] = *args[i];
+        else {
+            const auto &parameter = signature.parameters[i - implicit];
+            if (!parameter.default_function.empty()) {
+                const auto evaluator = program->functions.find(parameter.default_function);
+                if (evaluator == program->functions.end() || !invoke(evaluator->second, nullptr, 0, values[i])) {
+                    error_out.error = GDEXTENSION_CALL_ERROR_INVALID_METHOD;
+                    return false;
+                }
+            } else values[i] = parameter_default(parameter);
+        }
         int type = i < implicit ? -1 : signature.parameters[i - implicit].type;
         if (type == Variant::DICTIONARY && !signature.parameters[i - implicit].class_name.empty()) {
             for (const auto &c : program->ir.class_signatures)

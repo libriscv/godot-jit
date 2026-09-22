@@ -1,0 +1,6 @@
+extends RefCounted
+
+const Defaults = preload("../default_arguments.ugd")
+
+func root_vector() -> Vector3:
+	return Defaults.with_vector(null)

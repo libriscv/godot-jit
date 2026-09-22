@@ -1,0 +1,17 @@
+extends RefCounted
+
+func test_not_on_comparison_right() -> bool:
+	var a = true
+	var b = false
+	return (a == not b) and (b != not b) and (a == not not a)
+
+func test_not_precedence() -> bool:
+	var a = false
+	var b = 1
+	var c = 2
+	return (a == not b < c) and (not b == c) and (a == not b in [1, 2])
+
+func test_not_short_circuit() -> bool:
+	var a = true
+	var b = false
+	return (a == not b and a) and (b == not a or b)

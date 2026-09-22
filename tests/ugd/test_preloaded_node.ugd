@@ -1,0 +1,25 @@
+extends RefCounted
+
+const NodeBase = preload("node_base.ugd")
+
+class Stub extends NodeBase:
+	func fetch(path: String) -> Dictionary:
+		return {"from": "stub", "path": path}
+	func base_fetch() -> Dictionary:
+		return super.fetch("/api/base")
+
+class Child extends Stub:
+	pass
+
+func test_native_node_and_overrides() -> bool:
+	var instance = Child.new()
+	var tree = Engine.get_main_loop()
+	tree.root.add_child(instance)
+	var attached = instance.is_inside_tree()
+	var loaded = instance.load_all()
+	var explicit = instance.load_explicit()
+	var base = instance.base_fetch().get("from") == "base"
+	var logged = instance.log.size() == 1
+	var identity = typeof(instance) == TYPE_OBJECT and instance is Node
+	instance.free()
+	return attached and loaded and explicit and base and logged and identity

@@ -302,7 +302,7 @@ Dictionary UnsafeGDScript::_get_constants() const {
     }
     if (nested_name.is_empty()) {
         for (const auto &cls : program->ir.class_signatures) {
-            if (cls.is_struct || cls.is_trait) continue;
+            if (cls.is_struct || cls.is_trait || !cls.source_path.empty()) continue;
             const String name = str(cls.name);
             if (!nested_classes.has(name))
                 nested_classes[name] = nested_script(program, name);
@@ -321,6 +321,15 @@ Ref<UnsafeGDScript> UnsafeGDScript::nested_script(const std::shared_ptr<NativePr
     script->nested_name = name;
     script->program = program;
     script->static_state = std::make_shared<NativeState>(program);
+    for (const auto &cls : program->ir.class_signatures) {
+        if (str(cls.name) != name || cls.base_name.empty()) continue;
+        for (const auto &base : program->ir.class_signatures) {
+            if (base.name != cls.base_name) continue;
+            script->base_script = base.source_path.empty()
+                ? Ref<Script>(nested_script(program, str(base.name)))
+                : Ref<Script>(ResourceLoader::get_singleton()->load(str(base.source_path)));
+        }
+    }
     program->nested_scripts[name] = script->get_instance_id();
     gdextension_interface::object_set_script_instance(script->_owner,
         memnew(UnsafeGDScriptInstance(script.ptr(), script.ptr(), false, true))->create_native());
@@ -378,6 +387,16 @@ Variant UnsafeGDScript::_get_rpc_config() const {
 Error unsafe_compiler_options(const String &source, const String &source_path, gdscript::CompilerOptions &options,
                               String &error) {
     options.native_classes = true;
+    options.load_class_source = [](const std::string &requested, const std::string &source) {
+        String path = str(requested);
+        if (!path.begins_with("res://") && !path.begins_with("user://"))
+            path = str(source).get_base_dir().path_join(path);
+        path = path.simplify_path();
+        if (!FileAccess::file_exists(path))
+            throw std::runtime_error("Base script not found: " + std::string(path.utf8().get_data()));
+        return gdscript::CompilerOptions::BaseSource{"", path.utf8().get_data(),
+            FileAccess::get_file_as_string(path).utf8().get_data(), false};
+    };
     options.debug_info = EngineDebugger::get_singleton()->is_active();
     options.optimize = false;
     options.batch_iteration = false;
@@ -891,10 +910,8 @@ void UnsafeGDScriptInstance::callp(const StringName &n, const Variant **a, int c
         active->call(str(active->program->ir.functions[index].name), args.data(), args.size(), r, e);
     }
     if (!active->error.empty()) {
+        // Keep the failure status so callers cannot consume a null success.
         ERR_PRINT(str(active->error));
-        // A runtime fault was already reported at its native frame. The method
-        // exists: avoid a misleading "nonexistent function" break in its caller.
-        e.error = GDEXTENSION_CALL_OK;
         r = Variant();
     }
 }

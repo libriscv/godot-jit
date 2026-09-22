@@ -1,0 +1,26 @@
+extends RefCounted
+
+class Stage extends VBoxContainer:
+    pass
+
+var stage: Stage
+
+func set_stage(next: Stage) -> void:
+    stage = next
+
+func test_inner_class_member_construction() -> bool:
+    if stage != null:
+        return false
+    stage = Stage.new()
+    var ok = stage is Stage and stage is VBoxContainer
+    stage.free()
+    stage = null
+    return ok and stage == null
+
+func test_inner_class_member_parameter_assignment() -> bool:
+    var next = Stage.new()
+    set_stage(next)
+    var ok = stage == next
+    stage.free()
+    set_stage(null)
+    return ok and stage == null
